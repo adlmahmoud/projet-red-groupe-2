@@ -1,4 +1,4 @@
-package main
+package piscine
 
 type Character1 struct {
 	Nom        string
