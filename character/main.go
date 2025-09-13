@@ -66,7 +66,7 @@ func (player *Character2) initCharacter() {
 func (player *Character3) initCharacter() {
 	*player = Character3{
 		Nom:    "Genzo",
-		Classe: "Samourai",
+		Classe: "Samouraï",
 		Niveau: 1,
 		Pv:     40,
 		PvMax:  300,
