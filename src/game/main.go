@@ -13,11 +13,3 @@ func Isdead(Character.Pv) {
 		os.Exit(0)
 	}
 }
-
-func main() {
-	Degat := 0
-	for i := 0; i <= Character.Pv; i++ {
-		Degat := Character.Pv - i
-	}
-	fmt.Println(Degat)
-}
