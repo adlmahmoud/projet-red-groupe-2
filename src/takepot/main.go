@@ -1,4 +1,4 @@
-package main
+package takepot
 
 import "fmt"
 

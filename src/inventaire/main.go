@@ -1,4 +1,4 @@
-package marchant
+package inventaire
 
 import "fmt"
 
@@ -13,12 +13,11 @@ func (player Character) accessInventory() {
 	}
 }
 
-// Menu permettant d’interagir avec l’inventaire
 func (player *Character) MenuInventory() {
 	for true {
-		player.accessInventory() // Affiche l’inventaire
+		player.accessInventory()
 		fmt.Println("=== Menu inventaire ===")
-		fmt.Printf("\t1 - Marchant\n")
+		fmt.Printf("\t1 - Utiliser une potion de vie\n")
 		fmt.Printf("\t0 - Retour\n")
 		fmt.Println("Sélectionner un choix (1 ou 0) :")
 		var userChose int
@@ -26,7 +25,7 @@ func (player *Character) MenuInventory() {
 
 		switch userChose {
 		case 1:
-			player.marchant()
+			player.takePot() /
 		case 0:
 			return
 		default:
