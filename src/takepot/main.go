@@ -1,3 +1,7 @@
+package main
+
+import "fmt"
+
 func (player *Character) takePot() {
 	for index := range player.Inventaire {
 		if player.Inventaire[index].Nom == "Potion de vie" && player.Inventaire[index].Quantite > 0 {
