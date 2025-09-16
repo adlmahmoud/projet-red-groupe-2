@@ -33,7 +33,7 @@ type Item struct {
 	Quantite int
 }
 
-func (player *Character1) initCharacter() {
+func (player *Character1) InitCharacter() {
 	*player = Character1{
 		Nom:    "Chris",
 		Classe: "Humain",
@@ -47,7 +47,7 @@ func (player *Character1) initCharacter() {
 	}
 }
 
-func (player *Character2) initCharacter() {
+func (player *Character2) InitCharacter() {
 	*player = Character2{
 		Nom:    "Celeste",
 		Classe: "Mage",
@@ -63,7 +63,7 @@ func (player *Character2) initCharacter() {
 	}
 }
 
-func (player *Character3) initCharacter() {
+func (player *Character3) InitCharacter() {
 	*player = Character3{
 		Nom:    "Genzo",
 		Classe: "Samouraï",
