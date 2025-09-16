@@ -1,4 +1,4 @@
-package character
+package main
 
 type Character1 struct {
 	Nom        string
