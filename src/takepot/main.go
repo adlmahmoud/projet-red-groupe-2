@@ -1,8 +1,11 @@
 package takepot
 
-import "fmt"
+import (
+	"fmt"
+	"projet-red/takepot"
+)
 
-func (player *Character) takePot() {
+func (player *takepot.Character) takePot() {
 	for index := range player.Inventaire {
 		if player.Inventaire[index].Nom == "Potion de vie" && player.Inventaire[index].Quantite > 0 {
 			player.Pv += 50
