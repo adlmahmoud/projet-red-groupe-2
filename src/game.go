@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	Character "projet-red/character/main.go"
 )
 
-func Isdead(Character.Pv) {
-	dead := []rune(Character.Pv)
-	if dead == 0 {
+func (character *Character) Isdead(Character) {
+	//dead := []int{}
+	if true {
 		fmt.Println("bwaaa NULLLLL, recommence si ta une digniter")
 		os.Exit(0)
 	}

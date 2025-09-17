@@ -87,21 +87,3 @@ func (c *Character) afficherSkills() {
 	}
 	fmt.Println()
 }
-
-func main() {
-	char1 := initCharacter("Humain")
-	char2 := initCharacter("Mage")
-	char3 := initCharacter("Samouraï")
-
-	char2.addItem("Livre de Sort : Boule de Feu")
-
-	char1.afficherInventaire()
-	char2.afficherInventaire()
-	char3.afficherInventaire()
-
-	char2.useItem("Livre de Sort : Boule de Feu")
-
-	char1.afficherSkills()
-	char2.afficherSkills()
-	char3.afficherSkills()
-}

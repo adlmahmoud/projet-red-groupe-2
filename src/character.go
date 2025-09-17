@@ -1,25 +1,6 @@
 package main
 
-type Character1 struct {
-	Nom        string
-	Classe     string
-	Niveau     int
-	Pv         int
-	PvMax      int
-	Inventaire []Item
-}
-
-type Character2 struct {
-	Nom        string
-	Classe     string
-	Niveau     int
-	Pv         int
-	PvMax      int
-	Mana       int
-	Inventaire []Item
-}
-
-type Character3 struct {
+type Character struct {
 	Nom        string
 	Classe     string
 	Niveau     int
@@ -33,8 +14,8 @@ type Item struct {
 	Quantite int
 }
 
-func (player *Character1) InitCharacter() {
-	*player = Character1{
+func (player *Character) InitCharacterHumain() {
+	*player = Character{
 		Nom:    "Chris",
 		Classe: "Humain",
 		Niveau: 1,
@@ -47,8 +28,8 @@ func (player *Character1) InitCharacter() {
 	}
 }
 
-func (player *Character2) InitCharacter() {
-	*player = Character2{
+/* func (player *Character) InitCharacter() {
+	*player = Character{
 		Nom:    "Celeste",
 		Classe: "Mage",
 		Niveau: 1,
@@ -63,8 +44,8 @@ func (player *Character2) InitCharacter() {
 	}
 }
 
-func (player *Character3) InitCharacter() {
-	*player = Character3{
+func (player *Character) InitCharacter() {
+	*player = Character{
 		Nom:    "Genzo",
 		Classe: "Samouraï",
 		Niveau: 1,
@@ -75,4 +56,4 @@ func (player *Character3) InitCharacter() {
 			{"Pièces d'or", 20},
 		},
 	}
-}
+} */
