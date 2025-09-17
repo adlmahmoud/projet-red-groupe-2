@@ -1,11 +1,10 @@
-package inventaire
+package main
 
 import (
 	"fmt"
-	"projet-red/inventaire"
 )
 
-func (player inventaire.Character) accessInventory() {
+func (player Character) accessInventory() {
 	fmt.Println("=== Inventaire du personnage ===")
 	if len(player.Inventaire) == 0 {
 		fmt.Println("\tInventaire vide")
@@ -16,7 +15,7 @@ func (player inventaire.Character) accessInventory() {
 	}
 }
 
-func (player *inventaire.Character) MenuInventory() {
+func (player *Character) MenuInventory() {
 	for true {
 		player.accessInventory()
 		fmt.Println("=== Menu inventaire ===")
@@ -28,7 +27,7 @@ func (player *inventaire.Character) MenuInventory() {
 
 		switch userChose {
 		case 1:
-			player.takePot()
+			player.takePotLife()
 		case 2:
 			return
 		default:
