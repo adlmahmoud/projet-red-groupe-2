@@ -1,0 +1,1371 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"math/rand"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+)
+
+// Couleurs ANSI pour le texte
+const (
+	Reset   = "\033[0m"
+	Red     = "\033[31m"
+	Green   = "\033[32m"
+	Yellow  = "\033[33m"
+	Blue    = "\033[34m"
+	Magenta = "\033[35m"
+	Cyan    = "\033[36m"
+	White   = "\033[37m"
+	Bold    = "\033[1m"
+)
+
+// Structures de données
+type Character struct {
+	Name          string
+	Class         string
+	Level         int
+	MaxHealth     int
+	CurrentHealth int
+	MaxMana       int
+	CurrentMana   int
+	Gold          int
+	Inventory     []string
+	Skills        []Skill
+	Equipment     Equipment
+	Experience    int
+	MaxExperience int
+	AttackPower   int
+	Initiative    int
+	MaxInventory  int
+}
+
+type Skill struct {
+	Name        string
+	Damage      int
+	ManaCost    int
+	Description string
+}
+
+type Equipment struct {
+	Head  string
+	Torso string
+	Feet  string
+}
+
+type Monster struct {
+	Name          string
+	MaxHealth     int
+	CurrentHealth int
+	AttackPower   int
+	Initiative    int
+	GoldReward    int
+	ExpReward     int
+	Description   string
+}
+
+// Constantes pour les classes
+const (
+	Human   = "Humain"
+	Mage    = "Mage"
+	Samurai = "Samouraï"
+)
+
+// Constantes pour les zones
+const (
+	FlowerPlain   = "Plaine en fleur"
+	KingdomGates  = "Portes du Royaume"
+	JudgmentTower = "Tour du jugement"
+	NazarickTomb  = "Désert aride du tombeau de Nazarick"
+	BackyardCrypt = "Crypte de l'arrière cour"
+	RuinCastle    = "Château en ruine"
+)
+
+// Variables globales
+var currentZone = FlowerPlain
+var player Character
+var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+var merchantInfo = []string{
+	"Chavrot était autrefois un noble chevalier avant de devenir le gardien des portes...",
+	"Moonlight est une créature née de la fusion d'une prêtresse et d'un fragment d'étoile...",
+	"Ainzolgone était un mage respecté avant que la folie ne s'empare de lui...",
+	"Bahamut est un serpent ancien gardien des secrets oubliés...",
+	"Negal était un gladiateur qui a gagné sa liberté par la force...",
+	"Achlys était une reine aimée avant que l'ambition ne la corrompe...",
+}
+
+func main() {
+	initializeGame()
+
+	for {
+		fmt.Printf("\n%s=== YNOV KINGDOM ===%s\n", Cyan+Bold, Reset)
+		fmt.Printf("%sLocalisation: %s%s\n", Yellow, currentZone, Reset)
+		fmt.Println("1. Menu principal")
+		fmt.Println("2. Explorer la zone actuelle")
+		fmt.Println("3. Afficher la carte")
+		fmt.Println("4. Quitter le jeu")
+
+		choice := getChoice(4)
+
+		switch choice {
+		case 1:
+			mainMenu()
+		case 2:
+			exploreZone()
+		case 3:
+			displayMap()
+		case 4:
+			fmt.Println("Merci d'avoir joué à Ynov Kingdom!")
+			os.Exit(0)
+		}
+	}
+}
+
+func initializeGame() {
+	clearScreen()
+	fmt.Printf("%sBienvenue dans Ynov Kingdom!%s\n", Green+Bold, Reset)
+	fmt.Println("Histoire: Tout commença il y a fort longtemps, dans un royaume d'une contrée éloignée...")
+	fmt.Println("Des années plus tard...")
+	fmt.Println("Après plusieurs mois de marche, vous arrivez enfin sur les terres du royaume d'Ynov.")
+
+	characterCreation()
+
+	// Équipement initial selon la classe
+	switch player.Class {
+	case Human:
+		player.Inventory = append(player.Inventory, "Gants de combat")
+		player.Skills = []Skill{
+			{Name: "Coups de poing", Damage: 20, Description: "Une attaque de base avec les poings"},
+			{Name: "Coups de pieds", Damage: 20, Description: "Une attaque de base avec les pieds"},
+		}
+	case Mage:
+		player.Inventory = append(player.Inventory, "Bâton magique", "Potion de mana")
+		player.Skills = []Skill{
+			{Name: "Luciole de feu", Damage: 25, ManaCost: 5, Description: "Petite boule de feu élémentaire"},
+			{Name: "Éclair", Damage: 25, ManaCost: 10, Description: "Décharge électrique"},
+		}
+		player.MaxMana = 200
+		player.CurrentMana = 30
+	case Samurai:
+		player.Inventory = append(player.Inventory, "Katana")
+		player.Skills = []Skill{
+			{Name: "Coups de poing", Damage: 25, Description: "Une attaque de base avec les poings"},
+			{Name: "Coups de pieds", Damage: 25, Description: "Une attaque de base avec les pieds"},
+		}
+	}
+
+	player.Inventory = append(player.Inventory, "Potion de vie", "Potion de vie")
+	player.MaxInventory = 10
+
+	fmt.Printf("\n%sFélicitations! Votre personnage %s de classe %s a été créé!%s\n", Green+Bold, player.Name, player.Class, Reset)
+	displayCharacterInfo()
+
+	fmt.Printf("\n%sVous contemplez les plaines fleuries d'Ynov. En poursuivant votre route, un brigand vous attaque!%s\n", Yellow, Reset)
+	waitForInput()
+
+	// Premier combat contre le brigand
+	brigand := createMonster("Brigand", 60, 10, 5, 10, "Un bandit des routes armé d'un couteau")
+	combat(brigand)
+
+	fmt.Printf("\n%sButin: 10 pièces d'or + 2 niveaux%s\n", Green, Reset)
+	player.Gold += 10
+	player.Level += 2
+	player.MaxHealth += 40
+	player.CurrentHealth = player.MaxHealth
+
+	if player.Class == Mage {
+		player.MaxMana += 40
+		player.CurrentMana = player.MaxMana
+	}
+
+	fmt.Printf("\n%sEn continuant votre route, vous tombez sur un coffre.%s\n", Yellow, Reset)
+	fmt.Println("Que faites-vous?")
+	fmt.Println("1. L'ouvrir pour voir ce qu'il contient")
+	fmt.Println("2. Passer votre chemin")
+
+	choice := getChoice(2)
+
+	if choice == 1 {
+		fmt.Printf("\n%sEn ouvrant le coffre, vous y récupérez un équipement!%s\n", Green, Reset)
+		switch player.Class {
+		case Human:
+			if !hasItem("Gants de combat") {
+				player.Inventory = append(player.Inventory, "Gants de combat")
+				fmt.Println("Vous obtenez des Gants de combat!")
+			} else {
+				fmt.Println("Le coffre contenait des Gants de combat, mais vous en avez déjà.")
+			}
+		case Mage:
+			if !hasItem("Bâton magique") {
+				player.Inventory = append(player.Inventory, "Bâton magique")
+				fmt.Println("Vous obtenez un Bâton magique!")
+			} else {
+				fmt.Println("Le coffre contenait un Bâton magique, mais vous en avez déjà.")
+			}
+		case Samurai:
+			if !hasItem("Katana") {
+				player.Inventory = append(player.Inventory, "Katana")
+				fmt.Println("Vous obtenez un Katana!")
+			} else {
+				fmt.Println("Le coffre contenait un Katana, mais vous en avez déjà.")
+			}
+		}
+	} else {
+		fmt.Println("Vous décidez de passer votre chemin et de continuer votre route.")
+	}
+
+	waitForInput()
+
+	fmt.Printf("\n%sVous continuez d'avancer pour atteindre les portes du royaume, mais soudain un homme surgit de derrière des arbres et vous attaque!%s\n", Yellow, Reset)
+	waitForInput()
+
+	// Combat contre le voleur
+	thief := createMonster("Voleur", 60, 20, 5, 10, "Un voleur agile avec des couteaux")
+	combat(thief)
+
+	fmt.Printf("\n%sButin: 10 pièces d'or + 2 niveaux%s\n", Green, Reset)
+	player.Gold += 10
+	player.Level += 2
+	player.MaxHealth += 40
+	player.CurrentHealth = player.MaxHealth
+
+	if player.Class == Mage {
+		player.MaxMana += 40
+		player.CurrentMana = player.MaxMana
+	}
+
+	waitForInput()
+
+	fmt.Printf("\n%sVous continuez sur le chemin menant aux portes du royaume. Au loin, une silhouette se dessine.%s\n", Yellow, Reset)
+	fmt.Println("En vous rapprochant, vous découvrez un vieil homme. Il vous interpelle:")
+	fmt.Printf("%s<< Je suis marchand d'objets, de ressources, mais aussi d'informations... contre quelques pièces d'or. >>%s\n", Cyan, Reset)
+	fmt.Println("\nQue faites-vous?")
+	fmt.Println("1. Faire quelques courses / pêche aux informations")
+	fmt.Println("2. Passer votre chemin et continuer")
+
+	choice = getChoice(2)
+
+	if choice == 1 {
+		merchantMenu()
+	} else {
+		fmt.Println("Vous décidez de continuer votre route sans vous arrêter.")
+	}
+
+	// Le jeu continue avec d'autres zones et combats...
+	currentZone = KingdomGates
+	fmt.Printf("\n%sVous arrivez enfin aux %s. Un gardien imposant se tient devant vous...%s\n", Yellow, KingdomGates, Reset)
+	waitForInput()
+
+	// Combat contre Chavrot
+	chavrot := createMonster("Chavrot", 100, 25, 15, 50, "Le gardien des portes, un vieux guerrier expérimenté")
+	combat(chavrot)
+
+	fmt.Printf("\n%sFélicitations! Vous avez vaincu Chavrot et pouvez maintenant entrer dans le royaume!%s\n", Green+Bold, Reset)
+	player.Level += 3
+	player.Gold += 30
+}
+
+func characterCreation() {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Printf("\n%s=== Création de personnage ===%s\n", Cyan+Bold, Reset)
+
+	// Nom du personnage
+	fmt.Print("Entrez le nom de votre personnage: ")
+	name, _ := reader.ReadString('\n')
+	name = strings.TrimSpace(name)
+	if len(name) > 0 {
+		name = strings.ToUpper(string(name[0])) + strings.ToLower(name[1:])
+	} else {
+		name = "Héros"
+	}
+
+	// Classe du personnage
+	fmt.Println("\nChoisissez votre classe:")
+	fmt.Println("1. Humain (PV: 200, Attaque: 20)")
+	fmt.Println("2. Mage (PV: 250, Mana: 200, Attaque: 25)")
+	fmt.Println("3. Samouraï (PV: 300, Attaque: 25)")
+
+	classChoice := getChoice(3)
+
+	var class string
+	var maxHealth, currentHealth, maxMana, currentMana, attackPower int
+
+	switch classChoice {
+	case 1:
+		class = Human
+		maxHealth = 200
+		currentHealth = 30
+		attackPower = 20
+	case 2:
+		class = Mage
+		maxHealth = 250
+		currentHealth = 35
+		maxMana = 200
+		currentMana = 30
+		attackPower = 25
+	case 3:
+		class = Samurai
+		maxHealth = 300
+		currentHealth = 40
+		attackPower = 90
+	}
+
+	// Initialisation du personnage
+	player = Character{
+		Name:          name,
+		Class:         class,
+		Level:         1,
+		MaxHealth:     maxHealth,
+		CurrentHealth: currentHealth,
+		MaxMana:       maxMana,
+		CurrentMana:   currentMana,
+		Gold:          20,
+		AttackPower:   attackPower,
+		Initiative:    10,
+		MaxExperience: 100,
+	}
+
+	// Inventaire de départ selon la classe
+	switch class {
+	case Human:
+		player.Inventory = []string{"Potion de vie", "Potion de vie"}
+		player.Gold = 30
+	case Mage:
+		player.Inventory = []string{"Potion de vie", "Potion de vie", "Potion de mana"}
+		player.Gold = 20
+	case Samurai:
+		player.Inventory = []string{"Potion de vie", "Katana"}
+		player.Gold = 20
+	}
+}
+
+func mainMenu() {
+	for {
+		clearScreen()
+		fmt.Printf("\n%s=== MENU PRINCIPAL ===%s\n", Cyan+Bold, Reset)
+		fmt.Println("1. Afficher les informations du personnage")
+		fmt.Println("2. Accéder à l'inventaire")
+		fmt.Println("3. Marchand")
+		fmt.Println("4. Forgeron")
+		fmt.Println("5. Combat d'entraînement")
+		fmt.Println("6. Quitter le jeu")
+
+		choice := getChoice(6)
+
+		switch choice {
+		case 1:
+			displayCharacterInfo()
+		case 2:
+			accessInventory()
+		case 3:
+			merchantMenu()
+		case 4:
+			blacksmithMenu()
+		case 5:
+			startTrainingFight()
+		case 6:
+			return
+		}
+	}
+}
+
+func displayCharacterInfo() {
+	clearScreen()
+	fmt.Printf("\n%s=== INFORMATIONS DU PERSONNAGE ===%s\n", Cyan+Bold, Reset)
+	fmt.Printf("Nom: %s%s%s\n", Yellow, player.Name, Reset)
+	fmt.Printf("Classe: %s%s%s\n", Yellow, player.Class, Reset)
+	fmt.Printf("Niveau: %s%d%s\n", Yellow, player.Level, Reset)
+	fmt.Printf("PV: %s%d/%d%s\n", Green, player.CurrentHealth, player.MaxHealth, Reset)
+
+	if player.Class == Mage {
+		fmt.Printf("Mana: %s%d/%d%s\n", Blue, player.CurrentMana, player.MaxMana, Reset)
+	}
+
+	fmt.Printf("Or: %s%d pièces%s\n", Yellow, player.Gold, Reset)
+	fmt.Printf("Attaque: %s%d%s\n", Red, player.AttackPower, Reset)
+	fmt.Printf("Initiative: %s%d%s\n", Cyan, player.Initiative, Reset)
+	fmt.Printf("Expérience: %s%d/%d%s\n", Cyan, player.Experience, player.MaxExperience, Reset)
+
+	fmt.Println("Équipement:")
+	fmt.Printf("  Tête: %s%s%s\n", Yellow, player.Equipment.Head, Reset)
+	fmt.Printf("  Torse: %s%s%s\n", Yellow, player.Equipment.Torso, Reset)
+	fmt.Printf("  Pieds: %s%s%s\n", Yellow, player.Equipment.Feet, Reset)
+
+	fmt.Println("Compétences:")
+	for _, skill := range player.Skills {
+		fmt.Printf("  - %s%s%s: %ddégât", Magenta, skill.Name, Reset, skill.Damage)
+		if skill.ManaCost > 0 {
+			fmt.Printf(" (%d mana)", skill.ManaCost)
+		}
+		fmt.Printf(" - %s\n", skill.Description)
+	}
+
+	waitForInput()
+}
+
+func accessInventory() {
+	for {
+		clearScreen()
+		fmt.Printf("\n%s=== INVENTAIRE ===%s\n", Cyan+Bold, Reset)
+		fmt.Printf("Capacité: %s%d/%d%s\n", Yellow, len(player.Inventory), player.MaxInventory, Reset)
+
+		if len(player.Inventory) == 0 {
+			fmt.Println("Votre inventaire est vide.")
+		} else {
+			for i, item := range player.Inventory {
+				fmt.Printf("%s%d.%s %s\n", Cyan, i+1, Reset, item)
+			}
+		}
+
+		fmt.Println("\nQue voulez-vous faire?")
+		fmt.Println("1. Utiliser un objet")
+		fmt.Println("2. Équiper un objet")
+		fmt.Println("3. Retour au menu principal")
+
+		choice := getChoice(3)
+
+		if choice == 3 {
+			break
+		}
+
+		if len(player.Inventory) == 0 {
+			fmt.Println("Vous n'avez aucun objet à utiliser.")
+			waitForInput()
+			continue
+		}
+
+		if choice == 1 {
+			fmt.Print("Quel objet voulez-vous utiliser? (numéro): ")
+			itemChoice := getChoice(len(player.Inventory))
+			useItem(player.Inventory[itemChoice-1])
+		} else if choice == 2 {
+			fmt.Print("Quel objet voulez-vous équiper? (numéro): ")
+			itemChoice := getChoice(len(player.Inventory))
+			equipItem(player.Inventory[itemChoice-1])
+		}
+	}
+}
+
+func useItem(item string) {
+	switch item {
+	case "Potion de vie":
+		heal := 50
+		if player.CurrentHealth+heal > player.MaxHealth {
+			heal = player.MaxHealth - player.CurrentHealth
+		}
+		player.CurrentHealth += heal
+		fmt.Printf("%sVous utilisez une Potion de vie et récupérez %d PV.%s\n", Green, heal, Reset)
+		removeFromInventory(item)
+	case "Potion de mana":
+		if player.Class == Mage {
+			heal := 50
+			if player.CurrentMana+heal > player.MaxMana {
+				heal = player.MaxMana - player.CurrentMana
+			}
+			player.CurrentMana += heal
+			fmt.Printf("%sVous utilisez une Potion de mana et récupérez %d points de mana.%s\n", Blue, heal, Reset)
+			removeFromInventory(item)
+		} else {
+			fmt.Println("Seuls les mages peuvent utiliser des potions de mana.")
+		}
+	case "Potion de poison":
+		fmt.Printf("%sVous utilisez une Potion de poison et vous empoisonnez!%s\n", Red, Reset)
+		go applyPoison()
+		removeFromInventory(item)
+	default:
+		if strings.Contains(item, "Livre de sort") {
+			learnSpell(item)
+		} else {
+			fmt.Printf("Vous ne pouvez pas utiliser %s directement.\n", item)
+		}
+	}
+	waitForInput()
+}
+
+func equipItem(item string) {
+	// Vérifier le type d'équipement
+	if strings.Contains(item, "Chapeau") {
+		if player.Equipment.Head != "" {
+			fmt.Printf("Vous retirez %s et équipez %s.\n", player.Equipment.Head, item)
+			player.Inventory = append(player.Inventory, player.Equipment.Head)
+		} else {
+			fmt.Printf("Vous équipez %s.\n", item)
+		}
+		player.Equipment.Head = item
+		removeFromInventory(item)
+	} else if strings.Contains(item, "Tunique") || strings.Contains(item, "Armure") {
+		if player.Equipment.Torso != "" {
+			fmt.Printf("Vous retirez %s et équipez %s.\n", player.Equipment.Torso, item)
+			player.Inventory = append(player.Inventory, player.Equipment.Torso)
+		} else {
+			fmt.Printf("Vous équipez %s.\n", item)
+		}
+		player.Equipment.Torso = item
+		removeFromInventory(item)
+	} else if strings.Contains(item, "Bottes") {
+		if player.Equipment.Feet != "" {
+			fmt.Printf("Vous retirez %s et équipez %s.\n", player.Equipment.Feet, item)
+			player.Inventory = append(player.Inventory, player.Equipment.Feet)
+		} else {
+			fmt.Printf("Vous équipez %s.\n", item)
+		}
+		player.Equipment.Feet = item
+		removeFromInventory(item)
+	} else {
+		fmt.Printf("%s n'est pas un équipement que vous pouvez équiper.\n", item)
+	}
+
+	// Mettre à jour les bonus d'équipement
+	updateEquipmentBonuses()
+	waitForInput()
+}
+
+func updateEquipmentBonuses() {
+	bonus := 0
+
+	if player.Equipment.Head == "Chapeau de l'aventurier" {
+		bonus += 10
+	}
+	if player.Equipment.Torso == "Tunique de l'aventurier" {
+		bonus += 25
+	}
+	if player.Equipment.Feet == "Bottes de l'aventurier" {
+		bonus += 15
+	}
+
+	baseHealth := getBaseHealth()
+	player.MaxHealth = baseHealth + bonus
+	if player.CurrentHealth > player.MaxHealth {
+		player.CurrentHealth = player.MaxHealth
+	}
+}
+
+func getBaseHealth() int {
+	switch player.Class {
+	case Human:
+		return 200 + (player.Level-1)*20
+	case Mage:
+		return 250 + (player.Level-1)*15
+	case Samurai:
+		return 300 + (player.Level-1)*25
+	default:
+		return 200
+	}
+}
+
+func removeFromInventory(item string) {
+	for i, invItem := range player.Inventory {
+		if invItem == item {
+			player.Inventory = append(player.Inventory[:i], player.Inventory[i+1:]...)
+			break
+		}
+	}
+}
+
+func hasItem(item string) bool {
+	for _, invItem := range player.Inventory {
+		if invItem == item {
+			return true
+		}
+	}
+	return false
+}
+
+func merchantMenu() {
+	for {
+		clearScreen()
+		fmt.Printf("\n%s=== MARCHAND ===%s\n", Cyan+Bold, Reset)
+		fmt.Printf("Votre or: %s%d pièces%s\n", Yellow, player.Gold, Reset)
+		fmt.Println("Que souhaitez-vous faire?")
+		fmt.Println("1. Acheter des objets")
+		fmt.Println("2. Acheter des informations")
+		fmt.Println("3. Vendre des objets")
+		fmt.Println("4. Retour au menu principal")
+
+		choice := getChoice(4)
+
+		if choice == 4 {
+			break
+		}
+
+		switch choice {
+		case 1:
+			buyItems()
+		case 2:
+			buyInformation()
+		case 3:
+			sellItems()
+		}
+	}
+}
+
+func buyItems() {
+	items := map[string]struct {
+		Price  int
+		Damage int
+	}{
+		"Potion de vie":                     {10, 0},
+		"Potion de mana":                    {20, 0},
+		"Potion de poison":                  {25, 0},
+		"Épée":                              {30, 40},
+		"Lance":                             {80, 70},
+		"Hache de guerre":                   {150, 120},
+		"Livre de sort: Éboulement":         {35, 40},
+		"Livre de sort: Éclair pourfendeur": {85, 75},
+		"Livre de sort: Horde de corbeaux":  {160, 130},
+		"Sabre Kitetsu":                     {35, 50},
+		"Katana Enma":                       {90, 85},
+		"Sabre Shisui":                      {170, 150},
+		"Fourrure de Loup":                  {4, 0},
+		"Peau de Troll":                     {7, 0},
+		"Cuir de Sanglier":                  {3, 0},
+		"Plume de Corbeau":                  {1, 0},
+		"Augmentation d'inventaire":         {30, 0},
+	}
+
+	for {
+		clearScreen()
+		fmt.Printf("\n%s=== OBJETS EN VENTE ===%s\n", Cyan+Bold, Reset)
+		fmt.Printf("Votre or: %s%d pièces%s\n", Yellow, player.Gold, Reset)
+		fmt.Printf("Capacité d'inventaire: %s%d/%d%s\n", Yellow, len(player.Inventory), player.MaxInventory, Reset)
+
+		i := 1
+		itemList := make([]string, 0, len(items))
+		for item, details := range items {
+			damageInfo := ""
+			if details.Damage > 0 {
+				damageInfo = fmt.Sprintf(" (%ddégât)", details.Damage)
+			}
+			fmt.Printf("%s%d.%s %s - %s%d pièces%s%s\n", Cyan, i, Reset, item, Yellow, details.Price, Reset, damageInfo)
+			itemList = append(itemList, item)
+			i++
+		}
+		fmt.Printf("%s%d.%s Retour\n", Cyan, i, Reset)
+
+		choice := getChoice(i)
+
+		if choice == i {
+			break
+		}
+
+		selectedItem := itemList[choice-1]
+		price := items[selectedItem].Price
+
+		if player.Gold < price {
+			fmt.Printf("%sVous n'avez pas assez d'or pour acheter cet objet.%s\n", Red, Reset)
+			waitForInput()
+			continue
+		}
+
+		if len(player.Inventory) >= player.MaxInventory {
+			fmt.Printf("%sVotre inventaire est plein. Vous ne pouvez pas acheter plus d'objets.%s\n", Red, Reset)
+			waitForInput()
+			continue
+		}
+
+		player.Gold -= price
+		player.Inventory = append(player.Inventory, selectedItem)
+		fmt.Printf("%sVous achetez %s pour %d pièces d'or.%s\n", Green, selectedItem, price, Reset)
+
+		// Effets spéciaux pour certains objets
+		if selectedItem == "Augmentation d'inventaire" {
+			player.MaxInventory += 10
+			fmt.Printf("%sVotre capacité d'inventaire augmente à %d.%s\n", Green, player.MaxInventory, Reset)
+			removeFromInventory(selectedItem) // On retire l'objet car c'est un consommable instantané
+		}
+
+		waitForInput()
+	}
+}
+
+func buyInformation() {
+	clearScreen()
+	fmt.Printf("\n%s=== INFORMATIONS DISPONIBLES ===%s\n", Cyan+Bold, Reset)
+	fmt.Printf("Votre or: %s%d pièces%s\n", Yellow, player.Gold, Reset)
+	fmt.Println("Les informations coûtent 15 pièces d'or chacune.")
+
+	for i := range merchantInfo {
+		fmt.Printf("%s%d.%s Information %d\n", Cyan, i+1, Reset, i+1)
+	}
+	fmt.Printf("%s%d.%s Retour\n", Cyan, len(merchantInfo)+1, Reset)
+
+	choice := getChoice(len(merchantInfo) + 1)
+
+	if choice == len(merchantInfo)+1 {
+		return
+	}
+
+	if player.Gold < 15 {
+		fmt.Printf("%sVous n'avez pas assez d'or pour acheter cette information.%s\n", Red, Reset)
+		waitForInput()
+		return
+	}
+
+	player.Gold -= 15
+	fmt.Printf("\n%s%s%s\n", Cyan, merchantInfo[choice-1], Reset)
+	waitForInput()
+}
+
+func sellItems() {
+	if len(player.Inventory) == 0 {
+		fmt.Printf("%sVous n'avez aucun objet à vendre.%s\n", Red, Reset)
+		waitForInput()
+		return
+	}
+
+	clearScreen()
+	fmt.Printf("\n%s=== OBJETS À VENDRE ===%s\n", Cyan+Bold, Reset)
+
+	for i, item := range player.Inventory {
+		price := getItemPrice(item) / 2 // On vend à moitié prix
+		fmt.Printf("%s%d.%s %s - %s%d pièces%s\n", Cyan, i+1, Reset, item, Yellow, price, Reset)
+	}
+	fmt.Printf("%s%d.%s Retour\n", Cyan, len(player.Inventory)+1, Reset)
+
+	choice := getChoice(len(player.Inventory) + 1)
+
+	if choice == len(player.Inventory)+1 {
+		return
+	}
+
+	item := player.Inventory[choice-1]
+	price := getItemPrice(item) / 2
+
+	player.Gold += price
+	removeFromInventory(item)
+	fmt.Printf("%sVous vendez %s pour %d pièces d'or.%s\n", Green, item, price, Reset)
+	waitForInput()
+}
+
+func getItemPrice(item string) int {
+	prices := map[string]int{
+		"Potion de vie":                     10,
+		"Potion de mana":                    20,
+		"Potion de poison":                  25,
+		"Épée":                              30,
+		"Lance":                             80,
+		"Hache de guerre":                   150,
+		"Livre de sort: Éboulement":         35,
+		"Livre de sort: Éclair pourfendeur": 85,
+		"Livre de sort: Horde de corbeaux":  160,
+		"Sabre Kitetsu":                     35,
+		"Katana Enma":                       90,
+		"Sabre Shisui":                      170,
+		"Fourrure de Loup":                  4,
+		"Peau de Troll":                     7,
+		"Cuir de Sanglier":                  3,
+		"Plume de Corbeau":                  1,
+		"Gants de combat":                   20,
+		"Bâton magique":                     25,
+		"Katana":                            30,
+	}
+
+	if price, exists := prices[item]; exists {
+		return price
+	}
+	return 5 // Prix par défaut pour les objets non listés
+}
+
+func blacksmithMenu() {
+	clearScreen()
+	fmt.Printf("\n%s=== FORGERON ===%s\n", Cyan+Bold, Reset)
+	fmt.Printf("Votre or: %s%d pièces%s\n", Yellow, player.Gold, Reset)
+	fmt.Println("Que souhaitez-vous fabriquer?")
+	fmt.Println("1. Chapeau de l'aventurier (1 Plume de Corbeau, 1 Cuir de Sanglier, 5 pièces)")
+	fmt.Println("2. Tunique de l'aventurier (2 Fourrure de Loup, 1 Peau de Troll, 5 pièces)")
+	fmt.Println("3. Bottes de l'aventurier (1 Fourrure de Loup, 1 Cuir de Sanglier, 5 pièces)")
+	fmt.Println("4. Retour")
+
+	choice := getChoice(4)
+
+	if choice == 4 {
+		return
+	}
+
+	var requiredItems []string
+	var itemName string
+	var cost int = 5
+
+	switch choice {
+	case 1:
+		requiredItems = []string{"Plume de Corbeau", "Cuir de Sanglier"}
+		itemName = "Chapeau de l'aventurier"
+	case 2:
+		requiredItems = []string{"Fourrure de Loup", "Fourrure de Loup", "Peau de Troll"}
+		itemName = "Tunique de l'aventurier"
+	case 3:
+		requiredItems = []string{"Fourrure de Loup", "Cuir de Sanglier"}
+		itemName = "Bottes de l'aventurier"
+	}
+
+	// Vérifier si le joueur a les ressources nécessaires
+	for _, item := range requiredItems {
+		if !hasItem(item) {
+			fmt.Printf("%sVous n'avez pas assez de %s pour fabriquer cet objet.%s\n", Red, item, Reset)
+			waitForInput()
+			return
+		}
+	}
+
+	if player.Gold < cost {
+		fmt.Printf("%sVous n'avez pas assez d'or. Il vous faut %d pièces.%s\n", Red, cost, Reset)
+		waitForInput()
+		return
+	}
+
+	if len(player.Inventory) >= player.MaxInventory {
+		fmt.Printf("%sVotre inventaire est plein. Vous ne pouvez pas fabriquer plus d'objets.%s\n", Red, Reset)
+		waitForInput()
+		return
+	}
+
+	// Retirer les ressources et l'or
+	for _, item := range requiredItems {
+		removeFromInventory(item)
+	}
+	player.Gold -= cost
+
+	// Ajouter l'objet fabriqué
+	player.Inventory = append(player.Inventory, itemName)
+	fmt.Printf("%sVous fabriquez %s!%s\n", Green, itemName, Reset)
+	waitForInput()
+}
+
+func startTrainingFight() {
+	clearScreen()
+	fmt.Printf("\n%s=== COMBAT D'ENTRAÎNEMENT ===%s\n", Cyan+Bold, Reset)
+	fmt.Println("Un gobelin d'entraînement apparaît!")
+
+	goblin := createMonster("Gobelin d'entraînement", 40, 5, 5, 8, "Un gobelin faible pour s'entraîner")
+	combat(goblin)
+
+	fmt.Println("Le combat d'entraînement est terminé!")
+	waitForInput()
+}
+
+func createMonster(name string, health, attack, initiative, gold int, description string) Monster {
+	return Monster{
+		Name:          name,
+		MaxHealth:     health,
+		CurrentHealth: health,
+		AttackPower:   attack,
+		Initiative:    initiative,
+		GoldReward:    gold,
+		ExpReward:     health / 10,
+		Description:   description,
+	}
+}
+
+func combat(monster Monster) {
+	clearScreen()
+	fmt.Printf("\n%s=== COMBAT CONTRE %s ===%s\n", Red+Bold, strings.ToUpper(monster.Name), Reset)
+	fmt.Printf("%s - PV: %s%d/%d%s - %s%s%s\n", monster.Name, Green, monster.CurrentHealth, monster.MaxHealth, Reset, Cyan, monster.Description, Reset)
+
+	round := 1
+
+	for monster.CurrentHealth > 0 && player.CurrentHealth > 0 {
+		fmt.Printf("\n%s--- Tour %d ---%s\n", Yellow+Bold, round, Reset)
+
+		// Déterminer qui attaque en premier en fonction de l'initiative
+		playerTurn := true
+		if monster.Initiative > player.Initiative {
+			playerTurn = false
+			fmt.Printf("%s%s a plus d'initiative et attaque en premier!%s\n", Yellow, monster.Name, Reset)
+		}
+
+		if !playerTurn {
+			monsterAttack(&monster)
+			if player.CurrentHealth <= 0 {
+				break
+			}
+		}
+
+		playerTurnMenu(&monster)
+		if monster.CurrentHealth <= 0 {
+			break
+		}
+
+		if playerTurn {
+			monsterAttack(&monster)
+		}
+
+		round++
+	}
+
+	if player.CurrentHealth <= 0 {
+		fmt.Printf("\n%sVous avez été vaincu! Vous perdez 10 pièces d'or.%s\n", Red, Reset)
+		player.Gold -= 10
+		if player.Gold < 0 {
+			player.Gold = 0
+		}
+		player.CurrentHealth = player.MaxHealth / 2
+		fmt.Printf("%sVous êtes ressuscité avec %d PV.%s\n", Green, player.CurrentHealth, Reset)
+	} else {
+		fmt.Printf("\n%sVous avez vaincu %s!%s\n", Green+Bold, monster.Name, Reset)
+		fmt.Printf("%sVous gagnez %d pièces d'or et %d points d'expérience.%s\n", Green, monster.GoldReward, monster.ExpReward, Reset)
+		player.Gold += monster.GoldReward
+		player.Experience += monster.ExpReward
+
+		// Vérifier si le joueur monte de niveau
+		for player.Experience >= player.MaxExperience {
+			levelUp()
+		}
+	}
+	waitForInput()
+}
+
+func playerTurnMenu(monster *Monster) {
+	fmt.Println("\n--- Votre tour ---")
+	fmt.Printf("PV: %s%d/%d%s", Green, player.CurrentHealth, player.MaxHealth, Reset)
+	if player.Class == Mage {
+		fmt.Printf(" | Mana: %s%d/%d%s", Blue, player.CurrentMana, player.MaxMana, Reset)
+	}
+	fmt.Println()
+	fmt.Printf("%s - PV: %s%d/%d%s\n", monster.Name, Green, monster.CurrentHealth, monster.MaxHealth, Reset)
+
+	fmt.Println("Que voulez-vous faire?")
+	fmt.Println("1. Attaquer")
+	fmt.Println("2. Utiliser une compétence")
+	fmt.Println("3. Utiliser un objet")
+
+	choice := getChoice(3)
+
+	switch choice {
+	case 1:
+		playerAttack(monster)
+	case 2:
+		useSkill(monster)
+	case 3:
+		useCombatItem()
+	}
+}
+
+func playerAttack(monster *Monster) {
+	damage := player.AttackPower
+
+	// Bonus d'équipement
+	if hasItem("Épée") {
+		damage += 10
+	} else if hasItem("Katana") {
+		damage += 15
+	} else if hasItem("Bâton magique") {
+		damage += 5
+	}
+
+	monster.CurrentHealth -= damage
+	if monster.CurrentHealth < 0 {
+		monster.CurrentHealth = 0
+	}
+
+	fmt.Printf("%sVous attaquez %s et infligez %d dégâts.%s\n", Yellow, monster.Name, damage, Reset)
+	fmt.Printf("%s - PV: %s%d/%d%s\n", monster.Name, Green, monster.CurrentHealth, monster.MaxHealth, Reset)
+}
+
+func useSkill(monster *Monster) {
+	fmt.Println("\nCompétences disponibles:")
+	for i, skill := range player.Skills {
+		manaInfo := ""
+		if skill.ManaCost > 0 {
+			manaInfo = fmt.Sprintf(" (%d mana)", skill.ManaCost)
+		}
+		fmt.Printf("%s%d.%s %s - %ddégât%s\n", Cyan, i+1, Reset, skill.Name, skill.Damage, manaInfo)
+	}
+	fmt.Printf("%s%d.%s Retour\n", Cyan, len(player.Skills)+1, Reset)
+
+	choice := getChoice(len(player.Skills) + 1)
+
+	if choice == len(player.Skills)+1 {
+		playerTurnMenu(monster)
+		return
+	}
+
+	skill := player.Skills[choice-1]
+
+	if player.Class == Mage && skill.ManaCost > 0 {
+		if player.CurrentMana < skill.ManaCost {
+			fmt.Printf("%sVous n'avez pas assez de mana pour utiliser cette compétence.%s\n", Red, Reset)
+			waitForInput()
+			useSkill(monster)
+			return
+		}
+		player.CurrentMana -= skill.ManaCost
+	}
+
+	monster.CurrentHealth -= skill.Damage
+	if monster.CurrentHealth < 0 {
+		monster.CurrentHealth = 0
+	}
+
+	fmt.Printf("%sVous utilisez %s et infligez %d dégâts à %s.%s\n", Magenta, skill.Name, skill.Damage, monster.Name, Reset)
+	fmt.Printf("%s - PV: %s%d/%d%s\n", monster.Name, Green, monster.CurrentHealth, monster.MaxHealth, Reset)
+	if skill.ManaCost > 0 {
+		fmt.Printf("Mana: %s%d/%d%s\n", Blue, player.CurrentMana, player.MaxMana, Reset)
+	}
+	waitForInput()
+}
+
+func useCombatItem() {
+	fmt.Println("\nObjets disponibles:")
+	for i, item := range player.Inventory {
+		fmt.Printf("%s%d.%s %s\n", Cyan, i+1, Reset, item)
+	}
+	fmt.Printf("%s%d.%s Retour\n", Cyan, len(player.Inventory)+1, Reset)
+
+	choice := getChoice(len(player.Inventory) + 1)
+
+	if choice == len(player.Inventory)+1 {
+		return
+	}
+
+	item := player.Inventory[choice-1]
+	useItem(item)
+}
+
+func monsterAttack(monster *Monster) {
+	damage := monster.AttackPower
+
+	// Pattern d'attaque spéciale tous les 3 tours
+	if r.Intn(3) == 0 {
+		damage *= 2
+		fmt.Printf("%s%s utilise une attaque spéciale!%s\n", Red, monster.Name, Reset)
+	}
+
+	player.CurrentHealth -= damage
+	if player.CurrentHealth < 0 {
+		player.CurrentHealth = 0
+	}
+
+	fmt.Printf("%s%s vous attaque et inflige %d dégâts.%s\n", Red, monster.Name, damage, Reset)
+	fmt.Printf("PV: %s%d/%d%s\n", Green, player.CurrentHealth, player.MaxHealth, Reset)
+	waitForInput()
+}
+
+func levelUp() {
+	player.Level++
+	player.Experience -= player.MaxExperience
+	player.MaxExperience = player.Level * 100
+
+	// Augmentation des statistiques
+	player.MaxHealth += 20
+	player.CurrentHealth = player.MaxHealth
+
+	if player.Class == Mage {
+		player.MaxMana += 20
+		player.CurrentMana = player.MaxMana
+	}
+
+	player.AttackPower += 5
+	player.Initiative += 2
+
+	fmt.Printf("\n%sFélicitations! Vous avez atteint le niveau %d!%s\n", Green+Bold, player.Level, Reset)
+	fmt.Printf("%sVos PV maximum augmentent à %d.%s\n", Green, player.MaxHealth, Reset)
+	if player.Class == Mage {
+		fmt.Printf("%sVos points de mana maximum augmentent à %d.%s\n", Blue, player.MaxMana, Reset)
+	}
+	fmt.Printf("%sVotre attaque augmente à %d.%s\n", Red, player.AttackPower, Reset)
+	waitForInput()
+}
+
+func applyPoison() {
+	fmt.Printf("\n%sVous êtes empoisonné! Vous perdez 10 PV par seconde pendant 3 secondes.%s\n", Red, Reset)
+
+	for i := 0; i < 3; i++ {
+		time.Sleep(1 * time.Second)
+		player.CurrentHealth -= 10
+		fmt.Printf("%sPoison: -10 PV | PV: %d/%d%s\n", Red, player.CurrentHealth, player.MaxHealth, Reset)
+
+		if player.CurrentHealth <= 0 {
+			checkIfDead()
+			break
+		}
+	}
+
+	fmt.Printf("%sLes effets du poison se dissipent.%s\n", Green, Reset)
+}
+
+func learnSpell(spellBook string) {
+	var spellName string
+	var damage int
+	var manaCost int
+
+	switch spellBook {
+	case "Livre de sort: Éboulement":
+		spellName = "Éboulement"
+		damage = 40
+		manaCost = 20
+	case "Livre de sort: Éclair pourfendeur":
+		spellName = "Éclair pourfendeur"
+		damage = 75
+		manaCost = 35
+	case "Livre de sort: Horde de corbeaux":
+		spellName = "Horde de corbeaux"
+		damage = 130
+		manaCost = 50
+	default:
+		fmt.Println("Ce livre de sort ne vous apprend rien de nouveau.")
+		return
+	}
+
+	// Vérifier si le sort est déjà connu
+	for _, skill := range player.Skills {
+		if skill.Name == spellName {
+			fmt.Printf("Vous connaissez déjà le sort %s.\n", spellName)
+			return
+		}
+	}
+
+	fmt.Printf("%sVous apprenez le sort %s! (%d dégâts, %d mana)%s\n", Magenta, spellName, damage, manaCost, Reset)
+	player.Skills = append(player.Skills, Skill{
+		Name:        spellName,
+		Damage:      damage,
+		ManaCost:    manaCost,
+		Description: "Sort appris par grimoire",
+	})
+	removeFromInventory(spellBook)
+}
+
+func exploreZone() {
+	fmt.Printf("\n%s=== VOUS ÊTES DANS LA %s ===%s\n", Cyan+Bold, currentZone, Reset)
+
+	switch currentZone {
+	case FlowerPlain:
+		fmt.Println("Vous vous trouvez dans une plaine fleurie magnifique.")
+		fmt.Println("Des brigands rôdent dans les parages...")
+	case KingdomGates:
+		fmt.Println("Vous êtes aux portes du royaume d'Ynov.")
+		fmt.Println("Un gardien imposant se tient devant l'entrée principale.")
+	case JudgmentTower:
+		fmt.Println("Vous entrez dans la tour du jugement, un lieu sinistre")
+		fmt.Println("habité par des morts-vivants et des mages fous.")
+	case NazarickTomb:
+		fmt.Println("Vous pénétrez dans le désert aride du tombeau de Nazarick.")
+		fmt.Println("Des créatures mythiques gardent ce lieu ancien.")
+	case BackyardCrypt:
+		fmt.Println("Vous explorez la crypte de l'arrière-cour, un lieu sombre")
+		fmt.Println("et humide habité par des trolls et autres créatures.")
+	case RuinCastle:
+		fmt.Println("Vous arrivez au château en ruine, ancienne demeure de la reine.")
+		fmt.Println("Des soldats fantômes et chevaliers noirs errent dans les couloirs.")
+	}
+
+	fmt.Println("\nQue souhaitez-vous faire?")
+	fmt.Println("1. Explorer la zone")
+	fmt.Println("2. Combattre les ennemis")
+	fmt.Println("3. Retourner à la zone précédente")
+	fmt.Println("4. Retour au menu principal")
+
+	choice := getChoice(4)
+
+	switch choice {
+	case 1:
+		exploreArea()
+	case 2:
+		fightEnemies()
+	case 3:
+		returnToPreviousZone()
+	case 4:
+		return
+	}
+}
+
+func exploreArea() {
+	fmt.Println("\nVous explorez la zone...")
+
+	// Chance de trouver un objet
+	if r.Intn(100) < 30 {
+		foundItems := []string{
+			"Potion de vie", "Potion de mana", "Fourrure de Loup",
+			"Cuir de Sanglier", "Plume de Corbeau",
+		}
+
+		item := foundItems[r.Intn(len(foundItems))]
+
+		if item == "Pièces d'or" {
+			gold := r.Intn(20) + 5
+			player.Gold += gold
+			fmt.Printf("%sVous trouvez %d pièces d'or!%s\n", Yellow, gold, Reset)
+		} else {
+			if len(player.Inventory) < player.MaxInventory {
+				player.Inventory = append(player.Inventory, item)
+				fmt.Printf("%sVous trouvez %s!%s\n", Green, item, Reset)
+			} else {
+				fmt.Printf("%sVous trouvez un objet, mais votre inventaire est plein!%s\n", Red, Reset)
+			}
+		}
+	} else {
+		fmt.Println("Vous explorez la zone mais ne trouvez rien d'intéressant.")
+	}
+
+	waitForInput()
+}
+
+func fightEnemies() {
+	fmt.Println("\nVous cherchez un combat...")
+
+	var monster Monster
+
+	switch currentZone {
+	case FlowerPlain:
+		enemies := []string{"Brigand", "Voleur"}
+		enemy := enemies[r.Intn(len(enemies))]
+
+		if enemy == "Brigand" {
+			monster = createMonster("Brigand", 60, 10, 8, 10, "Un bandit des routes armé d'un couteau")
+		} else {
+			monster = createMonster("Voleur", 60, 20, 10, 10, "Un voleur agile avec des couteaux")
+		}
+
+	case KingdomGates:
+		monster = createMonster("Rhinoppotame", 105, 25, 12, 20, "Une créature hybride de rhinocéros et d'hippopotame")
+
+	case JudgmentTower:
+		enemies := []string{"Squelette mage", "Mort-Vivant"}
+		enemy := enemies[r.Intn(len(enemies))]
+
+		if enemy == "Squelette mage" {
+			monster = createMonster("Squelette mage", 210, 30, 15, 30, "Un mage mort-vivant lançant des sorts")
+		} else {
+			monster = createMonster("Mort-Vivant", 210, 35, 15, 30, "Un cadavre animé assoiffé de chair")
+		}
+
+	case NazarickTomb:
+		enemies := []string{"Scorpion araignée", "Crabe géant", "Basilic"}
+		enemy := enemies[r.Intn(len(enemies))]
+
+		switch enemy {
+		case "Scorpion araignée":
+			monster = createMonster("Scorpion araignée", 280, 40, 18, 40, "Un hybride venimeux de scorpion et d'araignée")
+		case "Crabe géant":
+			monster = createMonster("Crabe géant", 310, 40, 18, 45, "Un crabe de taille monstrueuse avec des pinces acérées")
+		case "Basilic":
+			monster = createMonster("Basilic", 350, 45, 20, 50, "Un serpent géant au regard pétrifiant")
+		}
+
+	case BackyardCrypt:
+		enemies := []string{"Troll", "Chauve-souris géante", "Faucon de combat"}
+		enemy := enemies[r.Intn(len(enemies))]
+
+		switch enemy {
+		case "Troll":
+			monster = createMonster("Troll", 600, 60, 22, 60, "Une créature grande et forte mais lente d'esprit")
+		case "Chauve-souris géante":
+			monster = createMonster("Chauve-souris géante", 630, 60, 24, 65, "Une chauve-souris de la taille d'un homme")
+		case "Faucon de combat":
+			monster = createMonster("Faucon de combat", 700, 75, 26, 70, "Un rapace entraîné pour le combat")
+		}
+
+	case RuinCastle:
+		enemies := []string{"Marionnette soldat", "Cavalier sans tête", "Chevalier noir"}
+		enemy := enemies[r.Intn(len(enemies))]
+
+		switch enemy {
+		case "Marionnette soldat":
+			monster = createMonster("Marionnette soldat", 805, 70, 28, 80, "Un soldat artificiel contrôlé par magie")
+		case "Cavalier sans tête":
+			monster = createMonster("Cavalier sans tête", 835, 85, 30, 90, "Un spectre chevauchant sans tête")
+		case "Chevalier noir":
+			monster = createMonster("Chevalier noir", 950, 85, 32, 100, "Un chevalier corrompu par les ténèbres")
+		}
+	}
+
+	combat(monster)
+}
+
+func returnToPreviousZone() {
+	switch currentZone {
+	case KingdomGates:
+		currentZone = FlowerPlain
+	case JudgmentTower:
+		currentZone = KingdomGates
+	case NazarickTomb:
+		currentZone = JudgmentTower
+	case BackyardCrypt:
+		currentZone = NazarickTomb
+	case RuinCastle:
+		currentZone = BackyardCrypt
+	default:
+		fmt.Println("Vous ne pouvez pas revenir en arrière depuis ici.")
+	}
+
+	fmt.Printf("Vous retournez à la %s.\n", currentZone)
+	waitForInput()
+}
+
+func displayMap() {
+	clearScreen()
+	fmt.Printf("\n%s=== CARTE DU ROYAUME D'YNOV ===%s\n", Cyan+Bold, Reset)
+	fmt.Println("1. Plaine en fleur")
+	fmt.Println("2. Portes du Royaume")
+	fmt.Println("3. Tour du jugement")
+	fmt.Println("4. Désert aride du tombeau de Nazarick")
+	fmt.Println("5. Crypte de l'arrière cour")
+	fmt.Println("6. Château en ruine")
+	fmt.Println("7. Retour")
+
+	choice := getChoice(7)
+
+	if choice == 7 {
+		return
+	}
+
+	zones := []string{
+		FlowerPlain, KingdomGates, JudgmentTower,
+		NazarickTomb, BackyardCrypt, RuinCastle,
+	}
+
+	if choice-1 < len(zones) {
+		currentZone = zones[choice-1]
+		fmt.Printf("Vous vous dirigez vers %s.\n", currentZone)
+		waitForInput()
+	}
+}
+
+func checkIfDead() {
+	if player.CurrentHealth <= 0 {
+		fmt.Printf("\n%s=== VOUS ÊTES MORTS ===%s\n", Red+Bold, Reset)
+		fmt.Println("Vous avez été vaincu au combat!")
+		fmt.Println("Vous perdez la moitié de votre or et êtes ressuscité avec 50% de vos PV maximum.")
+
+		player.Gold /= 2
+		player.CurrentHealth = player.MaxHealth / 2
+
+		fmt.Printf("Or actuel: %d pièces\n", player.Gold)
+		fmt.Printf("PV actuels: %d/%d\n", player.CurrentHealth, player.MaxHealth)
+		waitForInput()
+	}
+}
+
+func getChoice(max int) int {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("Votre choix: ")
+		input, _ := reader.ReadString('\n')
+		input = strings.TrimSpace(input)
+
+		choice, err := strconv.Atoi(input)
+		if err != nil || choice < 1 || choice > max {
+			fmt.Printf("Veuillez entrer un nombre entre 1 et %d.\n", max)
+			continue
+		}
+
+		return choice
+	}
+}
+
+func waitForInput() {
+	fmt.Printf("%sAppuyez sur Entrée pour continuer...%s", Gray, Reset)
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
+}
+
+func clearScreen() {
+	fmt.Print("\033[H\033[2J")
+}
+
+// Couleur grise pour les textes d'attente
+const Gray = "\033[90m"
