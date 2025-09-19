@@ -234,8 +234,6 @@ func clearScreen() {
 
 func playMusic(songName string) {
 	color.Yellow("🎵 Lecture de la musique: %s...", songName)
-	// Pour jouer de la vraie musique, vous aurez besoin d'une bibliothèque comme:
-	// go get -u github.com/faiface/beep
 }
 
 func gameMenu(player *Character) {
@@ -249,8 +247,8 @@ func gameMenu(player *Character) {
 		fmt.Println("4. Forgeron")
 		fmt.Println("5. Combat d'entraînement")
 		fmt.Println("6. Qui sont-ils?")
-		fmt.Println("0. Quitter")
-
+		fmt.Println("7. Retourer")
+		fmt.Println("0. Quitter le jeu")
 		fmt.Print("Votre choix: ")
 		scanner.Scan()
 		choice := scanner.Text()
@@ -268,9 +266,13 @@ func gameMenu(player *Character) {
 			StartTrainingFight(player)
 		case "6":
 			whoAreThey()
-		case "0":
-			color.Green("Merci d'avoir joué à Ynov Kingdom!")
+		case "7":
+			color.Green("Bon courage")
 			return
+		case "0":
+			color.Yellow("Merci d'avoir joué! Tu abondonne vite bahahhaha")
+			os.Exit(0)
+
 		default:
 			color.Red("Choix invalide. Veuillez choisir une option valide.")
 		}
