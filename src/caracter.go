@@ -422,7 +422,7 @@ func (c *Character) levelUp() {
 	}
 }
 
-func (c *Character) removeSkill(skillName string) {
+func (c *Character) RemoveSkill(skillName string) {
 	for i, skill := range c.Skills {
 		if skill.Name == skillName {
 			c.Skills = append(c.Skills[:i], c.Skills[i+1:]...)

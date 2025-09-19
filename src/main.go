@@ -12,8 +12,6 @@ import (
 	"github.com/fatih/color"
 )
 
-var player = CreateCharacter()
-
 func main() {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	clearScreen()

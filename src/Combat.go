@@ -198,7 +198,7 @@ func StartTrainingFight(player *Character) {
 	}
 }
 
-func (c *Character) usePoisonPotion() {
+func (c *Character) UsePoisonPotion() {
 	for i, item := range c.Inventory {
 		if item.Type == "poison_potion" {
 			color.Red("\tVous utilisez une potion de poison!")
