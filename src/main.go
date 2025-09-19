@@ -178,13 +178,9 @@ func main() {
 			200, 40,
 		},
 	}
-
-	// Parcours de toutes les zones
 	for _, zone := range zones {
 		clearScreen()
 		color.Cyan("=== VOUS ENTREZ DANS LA ZONE: %s ===\n", zone.name)
-
-		// Combats contre les ennemis normaux
 		for _, enemy := range zone.enemies {
 			typeText(fmt.Sprintf("Un %s vous attaque!", enemy.Name))
 			Combat(player, &enemy, zone.name, zone.gold/2, zone.xp/2)
@@ -192,9 +188,8 @@ func main() {
 				player.revive()
 			}
 			fmt.Scanln()
+			gameMenu(player)
 		}
-
-		// Combat contre le boss
 		clearScreen()
 		color.Red("!!! BOSS FINAL: %s !!!", zone.boss.Name)
 		typeText(fmt.Sprintf("Vous affrontez %s, le gardien de cette zone!", zone.boss.Name))
@@ -210,9 +205,10 @@ func main() {
 
 		typeText("Appuyez sur Entrée pour continuer vers la prochaine zone...")
 		fmt.Scanln()
+
+		gameMenu(player)
 	}
 
-	gameMenu(player)
 }
 
 func typeText(text string) {
