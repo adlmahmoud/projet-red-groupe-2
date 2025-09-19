@@ -67,11 +67,14 @@ func UseItem(player *Character) {
 	fmt.Println("\nQuel objet voulez-vous utiliser?")
 	for i, item := range player.Inventory {
 		fmt.Printf("%d. %s", i+1, item.Name)
-		if item.Type == "potion" {
+		switch {
+		case item.Type == "potion":
 			fmt.Printf(" (Restaure %d PV)", item.Value)
-		} else if item.Type == "mana_potion" {
+
+		case item.Type == "mana_potion":
 			fmt.Printf(" (Restaure %d PM)", item.Value)
-		} else if item.Type == "book" {
+
+		case item.Type == "book":
 			fmt.Printf(" (Livre de sort: %s)", item.Description)
 		}
 		fmt.Println()

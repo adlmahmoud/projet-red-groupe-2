@@ -8,10 +8,13 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+
+	"github.com/fatih/color"
 )
 
+var player = CreateCharacter()
+
 func main() {
-	player := CreateCharacter()
 	Logo := `@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -96,65 +99,135 @@ func main() {
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`
 	fmt.Println(Logo)
 	rand.New(rand.NewSource(time.Now().UnixNano()))
+	clearScreen()
+	playMusic("Dark Souls Theme")
 
-	ClearScreen()
-
-	fmt.Println("Bienvenue dans Ynov Kingdom!")
-	fmt.Println("Histoire: Tout commença il y a fort longtemps, dans un royaume d'une contrée éloignée...")
-	fmt.Println("Appuyez sur Entrée pour commencer...")
-	fmt.Scanln()
-	PlayMusic("Dark Souls Theme")
-
-	ClearScreen()
-	fmt.Println("Des années plus tard...")
-	fmt.Println("Après plusieurs mois de marche, vous arrivez enfin sur les terres du royaume d'Ynov.")
-	fmt.Println("Vous contemplez ses plaines fleuries. En poursuivant votre route, un brigand vous attaque.")
-	fmt.Println("Appuyez sur Entrée pour continuer...")
+	typeText("Histoire: Tout commença il y a fort longtemps, dans un royaume d'une contrée éloignée...")
+	typeText("Ce royaume se nommait Ynov. Mais un jour, un accident se produisit et bouleversa la dynastie.")
+	typeText("Le roi fut assassiné par la reine, et les partisans des deux camps s'affrontèrent dans une guerre sanglante.")
+	typeText("Appuyez sur Entrée pour commencer votre aventure...")
 	fmt.Scanln()
 
-	ClearScreen()
-	brigand := CreateMonster("Brigand", 60, 10, "Plaquage")
-	Combat(player, brigand, "Plaine en fleur", 10, 2)
+	player := CreateCharacter()
 
-	ClearScreen()
-	fmt.Println("En continuant votre route, vous tombez sur un coffre.")
-	fmt.Println("Que faites-vous?")
-	fmt.Println("1. L'ouvrir pour voir ce qu'il contient")
-	fmt.Println("0. Passer votre chemin")
+	clearScreen()
+	typeText("Des années plus tard...")
+	typeText("Après plusieurs mois de marche, vous arrivez enfin sur les terres du royaume d'Ynov.")
+	typeText("Vous contemplez ses plaines fleuries. En poursuivant votre route, un brigand vous attaque.")
+	fmt.Scanln()
 
-	scanner := bufio.NewScanner(os.Stdin)
-	for {
-		fmt.Print("Votre choix: ")
-		scanner.Scan()
-		choice := scanner.Text()
-
-		if choice == "1" {
-			OpenChest(player)
-			break
-		} else if choice == "0" {
-			fmt.Println("Vous décidez de passer votre chemin.")
-			break
-		} else {
-			fmt.Println("Choix invalide. Veuillez choisir 1 ou 0.")
-		}
+	// Zones de jeu avec tous les combats
+	zones := []struct {
+		name    string
+		enemies []Monster
+		boss    Monster
+		gold    int
+		xp      int
+	}{
+		{
+			"Plaine en fleur",
+			[]Monster{
+				*CreateMonster("Brigand", 60, 10, "Plaquage"),
+				*CreateMonster("Voleur", 60, 20, "Lancer de couteau"),
+			},
+			*CreateBoss("Chavrot", 100, 100,25, "Coups de vieux",4)
+		},
+		{
+			"Tanner des alpha",
+			[]Monster{
+				*CreateMonster("Rhinoppotame", 105, 25, "Charge"),
+				*CreateMonster("Chien zombie", 105, 30, "Griffe de fer"),
+			},
+			*CreateBoss("Moonlight", 200, 35, "Eclipse"),
+			40, 8,
+		},
+		{
+			"La tour du jugement",
+			[]Monster{
+				*CreateMonster("Squelette mage", 210, 30, "Tarpin Nul"),
+				*CreateMonster("Mort-Vivant", 210, 35, "Morsure"),
+			},
+			*CreateBoss("Ainzolgone", 250, 45, "Avada kedabra"),
+			60, 12,
+		},
+		{
+			"Désert aride du tombeau de nazarick",
+			[]Monster{
+				*CreateMonster("Scorpion araignée", 280, 40, "Piqûre empoisonnée"),
+				*CreateMonster("Crabe géant", 310, 40, "Pince Masse"),
+				*CreateMonster("Basilic", 350, 45, "Coups de langue"),
+			},
+			*CreateBoss("Bahamut", 650, 55, "Morsure venimeuse"),
+			100, 20,
+		},
+		{
+			"Crypte de l'arrière cour",
+			[]Monster{
+				*CreateMonster("Troll", 600, 60, "Coups de massue"),
+				*CreateMonster("Chauve-souris géante", 630, 60, "Ultrason"),
+				*CreateMonster("Faucon de combat", 700, 75, "Piquer fulgurant"),
+			},
+			*CreateBoss("Negal", 800, 85, "Ragnarok"),
+			150, 30,
+		},
+		{
+			"Château en ruine",
+			[]Monster{
+				*CreateMonster("Marionnette soldat", 805, 70, "Coups d'épée"),
+				*CreateMonster("Cavalier sans tête", 835, 85, "Lance perforante"),
+				*CreateMonster("Chevalier noir", 950, 85, "Excalibur"),
+			},
+			*CreateBoss("Achlys", 1200, 150, "Ynov suprêmatique"),
+			200, 40,
+		},
 	}
 
-	ClearScreen()
-	fmt.Println("Vous continuez d'avancer pour atteindre les portes du royaume, mais soudain un homme surgit de derrière des arbres et vous attaque.")
-	fmt.Println("Appuyez sur Entrée pour continuer...")
-	fmt.Scanln()
+	// Parcours de toutes les zones
+	for _, zone := range zones {
+		clearScreen()
+		color.Cyan("=== VOUS ENTREZ DANS LA ZONE: %s ===\n", zone.name)
 
-	ClearScreen()
-	voleur := CreateMonster("Voleur", 60, 20, "Lancer de couteau")
-	Combat(player, voleur, "Plaine en fleur", 10, 2)
+		// Combats contre les ennemis normaux
+		for _, enemy := range zone.enemies {
+			typeText(fmt.Sprintf("Un %s vous attaque!", enemy.Name))
+			Combat(player, &enemy, zone.name, zone.gold/2, zone.xp/2)
+			if player.CurrentHealth <= 0 {
+				player.revive()
+			}
+			fmt.Scanln()
+		}
 
-	ClearScreen()
-	MeetMerchant(player)
+		// Combat contre le boss
+		clearScreen()
+		color.Red("!!! BOSS FINAL: %s !!!", zone.boss.Name)
+		typeText(fmt.Sprintf("Vous affrontez %s, le gardien de cette zone!", zone.boss.Name))
+		Combat(player, &zone.boss, zone.name, zone.gold, zone.xp)
+		if player.CurrentHealth <= 0 {
+			player.revive()
+		}
 
-	GameMenu(player)
+		if zone.name == "Château en ruine" {
+			color.Green("FÉLICITATIONS! Vous avez vaincu la reine Achlys et devenez le nouveau roi d'Ynov!")
+			break
+		}
+
+		typeText("Appuyez sur Entrée pour continuer vers la prochaine zone...")
+		fmt.Scanln()
+	}
+
+	gameMenu(player)
 }
 
-func ClearScreen() {
+func typeText(text string) {
+	for _, char := range text {
+		fmt.Printf("%c", char)
+		time.Sleep(30 * time.Millisecond)
+	}
+	fmt.Println()
+	time.Sleep(500 * time.Millisecond)
+}
+
+func clearScreen() {
 	if runtime.GOOS == "windows" {
 		cmd := exec.Command("cmd", "/c", "cls")
 		cmd.Stdout = os.Stdout
@@ -166,15 +239,17 @@ func ClearScreen() {
 	}
 }
 
-func PlayMusic(songName string) {
-	fmt.Printf("🎵 Lecture de la musique: %s...\n", songName)
+func playMusic(songName string) {
+	color.Yellow("🎵 Lecture de la musique: %s...", songName)
+	// Pour jouer de la vraie musique, vous aurez besoin d'une bibliothèque comme:
+	// go get -u github.com/faiface/beep
 }
 
-func GameMenu(player *Character) {
+func gameMenu(player *Character) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
-		fmt.Println("\n=== MENU PRINCIPAL ===")
+		color.Cyan("\n=== MENU PRINCIPAL ===")
 		fmt.Println("1. Afficher les informations du personnage")
 		fmt.Println("2. Accéder à l'inventaire")
 		fmt.Println("3. Visiter le marchand")
@@ -199,19 +274,19 @@ func GameMenu(player *Character) {
 		case "5":
 			StartTrainingFight(player)
 		case "6":
-			WhoAreThey()
+			whoAreThey()
 		case "0":
-			fmt.Println("Merci d'avoir joué à Ynov Kingdom!")
+			color.Green("Merci d'avoir joué à Ynov Kingdom!")
 			return
 		default:
-			fmt.Println("Choix invalide. Veuillez choisir une option valide.")
+			color.Red("Choix invalide. Veuillez choisir une option valide.")
 		}
 	}
 }
 
-func WhoAreThey() {
-	fmt.Println("\n=== QUI SONT-ILS? ===")
-	fmt.Println("Les artistes cachés dans le jeu sont:")
+func whoAreThey() {
+	color.Cyan("\n=== QUI SONT-ILS? ===")
+	typeText("Les artistes cachés dans le jeu sont:")
 	fmt.Println("1. Morgann - Ancien nom de Chavrot")
 	fmt.Println("2. Lunara - Ancienne prêtresse devenue Moonlight")
 	fmt.Println("3. Satorin - Ancien nom d'Ainzolgone")
