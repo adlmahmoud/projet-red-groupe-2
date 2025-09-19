@@ -11,7 +11,7 @@ type Monster struct {
 	Initiative    int
 }
 
-func createMonster(name string, health, damage int, skill string) *Monster {
+func CreateMonster(name string, health, damage int, skill string) *Monster {
 	return &Monster{
 		Name:          name,
 		MaxHealth:     health,
@@ -36,9 +36,9 @@ func CreateBoss(name string, health, damage int, skill string) *Monster {
 func initGoblin() *Monster {
 	return &Monster{
 		Name:          "Gobelin d'entraînement",
-		MaxHealth:     40,
-		CurrentHealth: 40,
-		Damage:        5,
+		MaxHealth:     80,
+		CurrentHealth: 80,
+		Damage:        15,
 		SkillName:     "Coup de poing",
 		Initiative:    rand.Intn(5) + 1,
 	}

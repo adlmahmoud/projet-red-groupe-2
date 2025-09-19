@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 type Character struct {
@@ -52,27 +54,27 @@ func CreateCharacter() *Character {
 	scanner := bufio.NewScanner(os.Stdin)
 	var player Character
 
-	fmt.Println("\n=== CRÉATION DU PERSONNAGE ===")
+	fmt.Println("\n\t=== CRÉATION DU PERSONNAGE ===")
 
 	for {
-		fmt.Print("Entrez le nom de votre personnage: ")
+		fmt.Print("\tEntrez le nom de votre personnage: ")
 		scanner.Scan()
 		name := strings.TrimSpace(scanner.Text())
 
 		if IsValidName(name) {
-			player.Name = FormatName(name)
+			player.Name = formatName(name)
 			break
 		} else {
-			fmt.Println("Nom invalide. Utilisez uniquement des lettres.")
+			fmt.Println("\tNom invalide. Utilisez uniquement des lettres.")
 		}
 	}
 
 	for {
-		fmt.Println("Choisissez votre classe:")
-		fmt.Println("1. Humain")
-		fmt.Println("2. Mage")
-		fmt.Println("3. Samouraï")
-		fmt.Print("Votre choix: ")
+		fmt.Println("\tChoisissez votre classe:")
+		fmt.Println("\t1. Humain")
+		fmt.Println("\t2. Mage")
+		fmt.Println("\t3. Samouraï (CHEATÉ!)")
+		fmt.Print("\tVotre choix: ")
 		scanner.Scan()
 		classChoice := scanner.Text()
 
@@ -80,66 +82,69 @@ func CreateCharacter() *Character {
 		case "1":
 			player.Class = "Humain"
 			player.MaxHealth = 200
-			player.CurrentHealth = 30
+			player.CurrentHealth = 100
 			player.Inventory = []Item{
-				{Name: "Potion", Description: "Restaure 50 PV", Type: "potion", Value: 50, Price: 10},
-				{Name: "Potion", Description: "Restaure 50 PV", Type: "potion", Value: 50, Price: 10},
+				{Name: "Potion", Description: "Restaure 100 PV", Type: "potion", Value: 100, Price: 10},
+				{Name: "Potion", Description: "Restaure 100 PV", Type: "potion", Value: 100, Price: 10},
 			}
 			player.Skills = []Skill{
-				{Name: "Coups de poing", Damage: 20, ManaCost: 0},
-				{Name: "Coups de pieds", Damage: 20, ManaCost: 0},
+				{Name: "Coups de poing", Damage: 30, ManaCost: 0},
+				{Name: "Coups de pieds", Damage: 30, ManaCost: 0},
 			}
-			player.Gold = 30
-			player.BaseDamage = 20
-			player.Initiative = 5
+			player.Gold = 100
+			player.BaseDamage = 30
+			player.Initiative = 7
 		case "2":
 			player.Class = "Mage"
-			player.MaxHealth = 250
-			player.CurrentHealth = 35
-			player.MaxMana = 200
-			player.CurrentMana = 30
+			player.MaxHealth = 180
+			player.CurrentHealth = 90
+			player.MaxMana = 300
+			player.CurrentMana = 150
 			player.Inventory = []Item{
-				{Name: "Potion", Description: "Restaure 50 PV", Type: "potion", Value: 50, Price: 10},
-				{Name: "Potion", Description: "Restaure 50 PV", Type: "potion", Value: 50, Price: 10},
-				{Name: "Potion de mana", Description: "Restaure 50 PM", Type: "mana_potion", Value: 50, Price: 20},
-				{Name: "Bâton magique", Description: "Arme de mage", Type: "weapon", Value: 30, Price: 50},
+				{Name: "Potion", Description: "Restaure 100 PV", Type: "potion", Value: 100, Price: 10},
+				{Name: "Potion", Description: "Restaure 100 PV", Type: "potion", Value: 100, Price: 10},
+				{Name: "Potion de mana", Description: "Restaure 100 PM", Type: "mana_potion", Value: 100, Price: 20},
+				{Name: "Bâton magique", Description: "Arme de mage", Type: "weapon", Value: 40, Price: 80},
 			}
 			player.Skills = []Skill{
-				{Name: "Luciole de feu", Damage: 25, ManaCost: 5},
-				{Name: "Éclair", Damage: 25, ManaCost: 10},
+				{Name: "Luciole de feu", Damage: 40, ManaCost: 15},
+				{Name: "Éclair", Damage: 50, ManaCost: 25},
 			}
-			player.Gold = 20
-			player.BaseDamage = 15
-			player.Initiative = 3
+			player.Gold = 80
+			player.BaseDamage = 20
+			player.Initiative = 5
 		case "3":
 			player.Class = "Samouraï"
-			player.MaxHealth = 300
-			player.CurrentHealth = 40
+			player.MaxHealth = 400
+			player.CurrentHealth = 400
 			player.Inventory = []Item{
-				{Name: "Potion", Description: "Restaure 50 PV", Type: "potion", Value: 50, Price: 10},
-				{Name: "Katana", Description: "Arme de samouraï", Type: "weapon", Value: 45, Price: 60},
+				{Name: "Potion", Description: "Restaure 200 PV", Type: "potion", Value: 200, Price: 10},
+				{Name: "Potion", Description: "Restaure 200 PV", Type: "potion", Value: 200, Price: 10},
+				{Name: "Katana", Description: "Arme de samouraï", Type: "weapon", Value: 80, Price: 100},
 			}
 			player.Skills = []Skill{
-				{Name: "Coups de poing", Damage: 25, ManaCost: 0},
-				{Name: "Coups de pieds", Damage: 25, ManaCost: 0},
+				{Name: "Coups de poing", Damage: 60, ManaCost: 0},
+				{Name: "Coups de pieds", Damage: 60, ManaCost: 0},
+				{Name: "Dans 3 pas tu meurs", Damage: 120, ManaCost: 0},
 			}
-			player.Gold = 20
-			player.BaseDamage = 25
-			player.Initiative = 7
+			player.Gold = 200
+			player.BaseDamage = 60
+			player.Initiative = 10
+			color.Red("\t⚔️  SAMOURAÏ CHEATÉ ACTIVÉ! ⚔️")
 		default:
-			fmt.Println("Choix invalide. Veuillez choisir 1, 2 ou 3.")
+			fmt.Println("\tChoix invalide. Veuillez choisir 1, 2 ou 3.")
 			continue
 		}
 		break
 	}
 
 	player.Level = 1
-	player.MaxInventory = 10
+	player.MaxInventory = 15
 	player.CurrentXP = 0
 	player.RequiredXP = 100
 
-	fmt.Printf("Félicitations! %s le %s est créé!\n", player.Name, player.Class)
-	player.DisplayInfo()
+	fmt.Printf("\tFélicitations! %s le %s est créé!\n", player.Name, player.Class)
+	player.displayInfo()
 
 	return &player
 }
@@ -148,17 +153,15 @@ func IsValidName(name string) bool {
 	if len(name) == 0 {
 		return false
 	}
-
 	for _, char := range name {
 		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || char == ' ') {
 			return false
 		}
 	}
-
 	return true
 }
 
-func FormatName(name string) string {
+func formatName(name string) string {
 	name = strings.ToLower(name)
 	if len(name) > 0 {
 		name = strings.ToUpper(string(name[0])) + name[1:]
@@ -166,43 +169,43 @@ func FormatName(name string) string {
 	return name
 }
 
-func (c *Character) DisplayInfo() {
-	fmt.Println("\n=== INFORMATIONS DU PERSONNAGE ===")
-	fmt.Printf("Nom: %s\n", c.Name)
-	fmt.Printf("Classe: %s\n", c.Class)
-	fmt.Printf("Niveau: %d\n", c.Level)
-	fmt.Printf("PV: %d/%d\n", c.CurrentHealth, c.MaxHealth)
+func (c *Character) displayInfo() {
+	color.Cyan("\n\t=== INFORMATIONS DU PERSONNAGE ===")
+	color.White("\tNom: %s", c.Name)
+	color.White("\tClasse: %s", c.Class)
+	color.White("\tNiveau: %d", c.Level)
+	color.White("\tPV: %d/%d", c.CurrentHealth, c.MaxHealth)
 	if c.Class == "Mage" {
-		fmt.Printf("PM: %d/%d\n", c.CurrentMana, c.MaxMana)
+		color.White("\tPM: %d/%d", c.CurrentMana, c.MaxMana)
 	}
-	fmt.Printf("Or: %d pièces\n", c.Gold)
-	fmt.Printf("XP: %d/%d\n", c.CurrentXP, c.RequiredXP)
-	fmt.Printf("Dégâts de base: %d\n", c.BaseDamage)
-	fmt.Printf("Initiative: %d\n", c.Initiative)
+	color.Yellow("\tOr: %d pièces", c.Gold)
+	color.Green("\tXP: %d/%d", c.CurrentXP, c.RequiredXP)
+	color.White("\tDégâts de base: %d", c.BaseDamage)
+	color.White("\tInitiative: %d", c.Initiative)
 
 	if len(c.Skills) > 0 {
-		fmt.Println("Compétences:")
+		color.Cyan("\tCompétences:")
 		for _, skill := range c.Skills {
-			fmt.Printf("  - %s (Dégâts: %d, Coût en mana: %d)\n", skill.Name, skill.Damage, skill.ManaCost)
+			color.White("\t  - %s (Dégâts: %d, Coût en mana: %d)", skill.Name, skill.Damage, skill.ManaCost)
 		}
 	}
 
 	if c.Equipment.Head.Name != "" || c.Equipment.Body.Name != "" || c.Equipment.Feet.Name != "" || c.Equipment.Weapon.Name != "" {
-		fmt.Println("Équipement:")
+		color.Cyan("\tÉquipement:")
 		if c.Equipment.Head.Name != "" {
-			fmt.Printf("  Tête: %s\n", c.Equipment.Head.Name)
+			color.White("\t  Tête: %s", c.Equipment.Head.Name)
 		}
 		if c.Equipment.Body.Name != "" {
-			fmt.Printf("  Corps: %s\n", c.Equipment.Body.Name)
+			color.White("\t  Corps: %s", c.Equipment.Body.Name)
 		}
 		if c.Equipment.Feet.Name != "" {
-			fmt.Printf("  Pieds: %s\n", c.Equipment.Feet.Name)
+			color.White("\t  Pieds: %s", c.Equipment.Feet.Name)
 		}
 		if c.Equipment.Weapon.Name != "" {
-			fmt.Printf("  Arme: %s\n", c.Equipment.Weapon.Name)
+			color.White("\t  Arme: %s", c.Equipment.Weapon.Name)
 		}
 	}
-	fmt.Println("Appuyez sur Entrée pour continuer...")
+	fmt.Println("\tAppuyez sur Entrée pour continuer...")
 	fmt.Scanln()
 }
 
@@ -213,29 +216,27 @@ func (c *Character) UsePotion() {
 			if c.CurrentHealth > c.MaxHealth {
 				c.CurrentHealth = c.MaxHealth
 			}
-			fmt.Printf("Vous utilisez une potion et récupérez %d PV. PV actuels: %d/%d\n", item.Value, c.CurrentHealth, c.MaxHealth)
-
+			fmt.Printf("\tVous utilisez une potion et récupérez %d PV. PV actuels: %d/%d\n", item.Value, c.CurrentHealth, c.MaxHealth)
 			c.Inventory = append(c.Inventory[:i], c.Inventory[i+1:]...)
 			return
 		}
 	}
-	fmt.Println("Vous n'avez pas de potion de vie dans votre inventaire.")
+	fmt.Println("\tVous n'avez pas de potion de vie dans votre inventaire.")
 }
 
-func (c *Character) UseManaPotion() {
+func (c *Character) useManaPotion() {
 	for i, item := range c.Inventory {
 		if item.Type == "mana_potion" {
 			c.CurrentMana += item.Value
 			if c.CurrentMana > c.MaxMana {
 				c.CurrentMana = c.MaxMana
 			}
-			fmt.Printf("Vous utilisez une potion de mana et récupérez %d PM. PM actuels: %d/%d\n", item.Value, c.CurrentMana, c.MaxMana)
-
+			fmt.Printf("\tVous utilisez une potion de mana et récupérez %d PM. PM actuels: %d/%d\n", item.Value, c.CurrentMana, c.MaxMana)
 			c.Inventory = append(c.Inventory[:i], c.Inventory[i+1:]...)
 			return
 		}
 	}
-	fmt.Println("Vous n'avez pas de potion de mana dans votre inventaire.")
+	fmt.Println("\tVous n'avez pas de potion de mana dans votre inventaire.")
 }
 
 func (c *Character) isDead() bool {
@@ -243,45 +244,44 @@ func (c *Character) isDead() bool {
 }
 
 func (c *Character) revive() {
-	if c.isDead() {
-		c.CurrentHealth = c.MaxHealth / 2
-		fmt.Printf("%s est ressuscité avec %d PV!\n", c.Name, c.CurrentHealth)
+	c.CurrentHealth = c.MaxHealth / 2
+	if c.Class == "Mage" {
+		c.CurrentMana = c.MaxMana
 	}
+	fmt.Printf("\t%s est ressuscité avec %d PV!\n", c.Name, c.CurrentHealth)
 }
 
-func (c *Character) LearnSpell(spellName string) {
+func (c *Character) learnSpell(spellName string) {
 	for _, skill := range c.Skills {
 		if skill.Name == spellName {
-			fmt.Println("Vous connaissez déjà ce sort!")
+			fmt.Println("\tVous connaissez déjà ce sort!")
 			return
 		}
 	}
 
 	switch spellName {
 	case "Boule de feu":
-		c.Skills = append(c.Skills, Skill{Name: "Boule de feu", Damage: 30, ManaCost: 10})
+		c.Skills = append(c.Skills, Skill{Name: "Boule de feu", Damage: 60, ManaCost: 20})
 	case "Éclair pourfendeur":
-		c.Skills = append(c.Skills, Skill{Name: "Éclair pourfendeur", Damage: 30, ManaCost: 10})
+		c.Skills = append(c.Skills, Skill{Name: "Éclair pourfendeur", Damage: 80, ManaCost: 30})
 	case "Éboulement":
-		c.Skills = append(c.Skills, Skill{Name: "Éboulement", Damage: 40, ManaCost: 20})
+		c.Skills = append(c.Skills, Skill{Name: "Éboulement", Damage: 100, ManaCost: 40})
 	case "Horde de corbeaux":
-		c.Skills = append(c.Skills, Skill{Name: "Horde de corbeaux", Damage: 130, ManaCost: 50})
+		c.Skills = append(c.Skills, Skill{Name: "Horde de corbeaux", Damage: 200, ManaCost: 80})
 	}
-
-	fmt.Printf("Vous avez appris le sort: %s!\n", spellName)
+	fmt.Printf("\tVous avez appris le sort: %s!\n", spellName)
 }
 
-func (c *Character) AddItem(item Item) bool {
+func (c *Character) addItem(item Item) bool {
 	if len(c.Inventory) >= c.MaxInventory {
-		fmt.Println("Votre inventaire est plein!")
+		fmt.Println("\tVotre inventaire est plein!")
 		return false
 	}
-
 	c.Inventory = append(c.Inventory, item)
 	return true
 }
 
-func (c *Character) RemoveItem(itemName string) bool {
+func (c *Character) removeItem(itemName string) bool {
 	for i, item := range c.Inventory {
 		if item.Name == itemName {
 			c.Inventory = append(c.Inventory[:i], c.Inventory[i+1:]...)
@@ -291,7 +291,7 @@ func (c *Character) RemoveItem(itemName string) bool {
 	return false
 }
 
-func (c *Character) HasItem(itemName string) bool {
+func (c *Character) hasItem(itemName string) bool {
 	for _, item := range c.Inventory {
 		if item.Name == itemName {
 			return true
@@ -300,7 +300,7 @@ func (c *Character) HasItem(itemName string) bool {
 	return false
 }
 
-func (c *Character) CountItem(itemName string) int {
+func (c *Character) countItem(itemName string) int {
 	count := 0
 	for _, item := range c.Inventory {
 		if item.Name == itemName {
@@ -310,110 +310,119 @@ func (c *Character) CountItem(itemName string) int {
 	return count
 }
 
-func (c *Character) EquipItem(itemName string) {
+func (c *Character) equipItem(itemName string) {
 	for i, item := range c.Inventory {
 		if item.Name == itemName {
 			switch item.Type {
 			case "weapon":
 				if c.Equipment.Weapon.Name != "" {
-					c.AddItem(c.Equipment.Weapon)
+					c.addItem(c.Equipment.Weapon)
 				}
-
 				c.Equipment.Weapon = item
-
 				if c.Class == "Humain" && item.Name == "Gants de combat" {
-					c.Skills = append(c.Skills, Skill{Name: "Patate de forain", Damage: 30, ManaCost: 0})
-					fmt.Println("Vous équipez les gants de combat et apprenez 'Patate de forain'!")
+					c.Skills = append(c.Skills, Skill{Name: "Patate de forain", Damage: 80, ManaCost: 0})
+					fmt.Println("\tVous équipez les gants de combat et apprenez 'Patate de forain'!")
 				} else if c.Class == "Mage" && item.Name == "Bâton magique" {
-					c.Skills = append(c.Skills, Skill{Name: "Boule de feu", Damage: 30, ManaCost: 10})
-					fmt.Println("Vous équipez le bâton magique et apprenez 'Boule de feu'!")
+					c.Skills = append(c.Skills, Skill{Name: "Boule de feu", Damage: 80, ManaCost: 30})
+					fmt.Println("\tVous équipez le bâton magique et apprenez 'Boule de feu'!")
 				} else if c.Class == "Samouraï" && item.Name == "Katana" {
-					c.Skills = append(c.Skills, Skill{Name: "Dans 3 pas tu meurs", Damage: 45, ManaCost: 0})
-					fmt.Println("Vous équipez le katana et apprenez 'Dans 3 pas tu meurs'!")
+					c.Skills = append(c.Skills, Skill{Name: "Dans 3 pas tu meurs", Damage: 200, ManaCost: 0})
+					fmt.Println("\tVous équipez le katana et apprenez 'Dans 3 pas tu meurs'!")
 				}
-
 			case "armor":
 				switch item.Name {
 				case "Chapeau de l'aventurier":
 					if c.Equipment.Head.Name != "" {
-						c.AddItem(c.Equipment.Head)
-						c.MaxHealth -= 10
+						c.addItem(c.Equipment.Head)
+						c.MaxHealth -= 20
 					}
 					c.Equipment.Head = item
-					c.MaxHealth += 10
-					fmt.Println("Vous équipez le Chapeau de l'aventurier! +10 PV max")
+					c.MaxHealth += 20
+					fmt.Println("\tVous équipez le Chapeau de l'aventurier! +20 PV max")
 				case "Tunique de l'aventurier":
 					if c.Equipment.Body.Name != "" {
-						c.AddItem(c.Equipment.Body)
-						c.MaxHealth -= 25
+						c.addItem(c.Equipment.Body)
+						c.MaxHealth -= 50
 					}
 					c.Equipment.Body = item
-					c.MaxHealth += 25
-					fmt.Println("Vous équipez la Tunique de l'aventurier! +25 PV max")
+					c.MaxHealth += 50
+					fmt.Println("\tVous équipez la Tunique de l'aventurier! +50 PV max")
 				case "Bottes de l'aventurier":
 					if c.Equipment.Feet.Name != "" {
-						c.AddItem(c.Equipment.Feet)
-						c.MaxHealth -= 15
+						c.addItem(c.Equipment.Feet)
+						c.MaxHealth -= 30
 					}
 					c.Equipment.Feet = item
-					c.MaxHealth += 15
-					fmt.Println("Vous équipez les Bottes de l'aventurier! +15 PV max")
+					c.MaxHealth += 30
+					fmt.Println("\tVous équipez les Bottes de l'aventurier! +30 PV max")
 				}
 			}
-
 			c.Inventory = append(c.Inventory[:i], c.Inventory[i+1:]...)
 			return
 		}
 	}
-	fmt.Printf("Vous n'avez pas d'objet '%s' dans votre inventaire.\n", itemName)
+	fmt.Printf("\tVous n'avez pas d'objet '%s' dans votre inventaire.\n", itemName)
 }
 
-func (c *Character) UpgradeInventory() {
+func (c *Character) upgradeInventory() {
 	if c.MaxInventory >= 40 {
-		fmt.Println("Vous avez déjà atteint la capacité maximale d'inventaire!")
+		fmt.Println("\tVous avez déjà atteint la capacité maximale d'inventaire!")
 		return
 	}
-
 	if c.Gold >= 30 {
 		c.MaxInventory += 10
 		c.Gold -= 30
-		fmt.Printf("Votre capacité d'inventaire est maintenant de %d emplacements!\n", c.MaxInventory)
+		fmt.Printf("\tVotre capacité d'inventaire est maintenant de %d emplacements!\n", c.MaxInventory)
 	} else {
-		fmt.Println("Vous n'avez pas assez d'or (30 pièces requis).")
+		fmt.Println("\tVous n'avez pas assez d'or (30 pièces requis).")
 	}
 }
 
-func (c *Character) AddXP(amount int) {
+func (c *Character) addXP(amount int) {
 	c.CurrentXP += amount
-	fmt.Printf("Vous gagnez %d points d'expérience!\n", amount)
+	fmt.Printf("\tVous gagnez %d points d'expérience!\n", amount)
 
+	levelsGained := 0
 	for c.CurrentXP >= c.RequiredXP {
-		c.LevelUp()
+		c.levelUp()
+		levelsGained++
+		c.CurrentXP -= c.RequiredXP
+		c.RequiredXP = c.Level * 50
+	}
+
+	if levelsGained > 0 {
+		fmt.Printf("\tVous avez gagné %d niveau(s)!\n", levelsGained)
 	}
 }
 
-func (c *Character) LevelUp() {
+func (c *Character) levelUp() {
 	c.Level++
-	c.CurrentXP -= c.RequiredXP
-	c.RequiredXP = c.Level * 100
 
-	c.MaxHealth += 20
+	if c.Class == "Samouraï" {
+		c.MaxHealth += 80
+		c.BaseDamage += 25
+	} else if c.Class == "Humain" {
+		c.MaxHealth += 40
+		c.BaseDamage += 15
+	} else if c.Class == "Mage" {
+		c.MaxHealth += 30
+		c.MaxMana += 80
+		c.BaseDamage += 12
+	}
+
 	c.CurrentHealth = c.MaxHealth
-	c.BaseDamage += 5
-
 	if c.Class == "Mage" {
-		c.MaxMana += 30
 		c.CurrentMana = c.MaxMana
 	}
 
-	fmt.Printf("Félicitations! Vous êtes maintenant niveau %d!\n", c.Level)
-	fmt.Printf("PV max: %d, Dégâts de base: %d\n", c.MaxHealth, c.BaseDamage)
+	fmt.Printf("\tFélicitations! Vous êtes maintenant niveau %d!\n", c.Level)
+	fmt.Printf("\tPV max: %d, Dégâts de base: %d\n", c.MaxHealth, c.BaseDamage)
 	if c.Class == "Mage" {
-		fmt.Printf("PM max: %d\n", c.MaxMana)
+		fmt.Printf("\tPM max: %d\n", c.MaxMana)
 	}
 }
 
-func (c *Character) RemoveSkill(skillName string) {
+func (c *Character) removeSkill(skillName string) {
 	for i, skill := range c.Skills {
 		if skill.Name == skillName {
 			c.Skills = append(c.Skills[:i], c.Skills[i+1:]...)

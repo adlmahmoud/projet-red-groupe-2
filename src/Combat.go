@@ -6,96 +6,74 @@ import (
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/fatih/color"
 )
 
-type Monster struct {
-	Name          string
-	MaxHealth     int
-	CurrentHealth int
-	Damage        int
-	SkillName     string
-	Initiative    int
-}
+func Combat(player *Character, monster *Monster, zoneName string, goldReward, xpReward int) bool {
+	color.Red("\t=== COMBAT CONTRE %s ===", monster.Name)
+	color.Blue("\tZone: %s", zoneName)
 
-func CreateMonster(name string, health, damage int, skill string) *Monster {
-	return &Monster{
-		Name:          name,
-		MaxHealth:     health,
-		CurrentHealth: health,
-		Damage:        damage,
-		SkillName:     skill,
-		Initiative:    rand.Intn(10) + 1,
-	}
-}
-
-func Combat(player *Character, monster *Monster, zoneName string, goldReward, xpReward int) {
-	fmt.Printf("=== COMBAT CONTRE %s ===\n", monster.Name)
-	fmt.Printf("Zone: %s\n", zoneName)
-
-	// Déterminer qui commence en fonction de l'initiative
 	playerTurn := player.Initiative >= monster.Initiative
 
 	if playerTurn {
-		fmt.Printf("%s a l'initiative et commence le combat!\n", player.Name)
+		color.Green("\t%s a l'initiative et commence le combat!", player.Name)
 	} else {
-		fmt.Printf("%s a l'initiative et commence le combat!\n", monster.Name)
+		color.Red("\t%s a l'initiative et commence le combat!", monster.Name)
 	}
 
 	round := 1
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for player.CurrentHealth > 0 && monster.CurrentHealth > 0 {
-		fmt.Printf("\n--- Tour %d ---\n", round)
+		color.Cyan("\n\t--- Tour %d ---", round)
 
 		if playerTurn {
-			// Tour du joueur
-			fmt.Printf("PV de %s: %d/%d\n", player.Name, player.CurrentHealth, player.MaxHealth)
+			color.Green("\tPV de %s: %d/%d", player.Name, player.CurrentHealth, player.MaxHealth)
 			if player.Class == "Mage" {
-				fmt.Printf("PM de %s: %d/%d\n", player.Name, player.CurrentMana, player.MaxMana)
+				color.Green("\tPM de %s: %d/%d", player.Name, player.CurrentMana, player.MaxMana)
 			}
-			fmt.Printf("PV de %s: %d/%d\n", monster.Name, monster.CurrentHealth, monster.MaxHealth)
+			color.Red("\tPV de %s: %d/%d", monster.Name, monster.CurrentHealth, monster.MaxHealth)
 
-			fmt.Println("Options:")
-			fmt.Println("1. Attaquer")
-			fmt.Println("2. Utiliser une compétence")
-			fmt.Println("3. Utiliser un objet")
-			fmt.Println("4. Fuir")
+			fmt.Println("\tOptions:")
+			fmt.Println("\t1. Attaquer")
+			fmt.Println("\t2. Utiliser une compétence")
+			fmt.Println("\t3. Utiliser un objet")
+			fmt.Println("\t4. Fuir")
 
-			fmt.Print("Votre choix: ")
+			fmt.Print("\tVotre choix: ")
 			scanner.Scan()
 			choice := scanner.Text()
 
 			switch choice {
 			case "1":
-				// Attaque basique
 				damage := player.BaseDamage
 				monster.CurrentHealth -= damage
-				fmt.Printf("%s inflige %d dégâts à %s avec une attaque basique!\n", player.Name, damage, monster.Name)
+				color.Green("\t%s inflige %d dégâts à %s avec une attaque basique!", player.Name, damage, monster.Name)
 			case "2":
-				// Utiliser une compétence
 				if len(player.Skills) == 0 {
-					fmt.Println("Vous n'avez aucune compétence!")
+					color.Red("\tVous n'avez aucune compétence!")
 					continue
 				}
 
-				fmt.Println("Compétences disponibles:")
+				fmt.Println("\tCompétences disponibles:")
 				for i, skill := range player.Skills {
-					fmt.Printf("%d. %s (Dégâts: %d, Coût en mana: %d)\n", i+1, skill.Name, skill.Damage, skill.ManaCost)
+					fmt.Printf("\t%d. %s (Dégâts: %d, Coût en mana: %d)\n", i+1, skill.Name, skill.Damage, skill.ManaCost)
 				}
-				fmt.Print("Votre choix: ")
+				fmt.Print("\tVotre choix: ")
 				scanner.Scan()
 				var skillChoice int
 				fmt.Sscanf(scanner.Text(), "%d", &skillChoice)
 
 				if skillChoice < 1 || skillChoice > len(player.Skills) {
-					fmt.Println("Choix invalide.")
+					color.Red("\tChoix invalide.")
 					continue
 				}
 
 				selectedSkill := player.Skills[skillChoice-1]
 
 				if player.Class == "Mage" && player.CurrentMana < selectedSkill.ManaCost {
-					fmt.Println("Vous n'avez pas assez de mana pour utiliser cette compétence!")
+					color.Red("\tVous n'avez pas assez de mana pour utiliser cette compétence!")
 					continue
 				}
 
@@ -105,66 +83,61 @@ func Combat(player *Character, monster *Monster, zoneName string, goldReward, xp
 
 				damage := selectedSkill.Damage
 				monster.CurrentHealth -= damage
-				fmt.Printf("%s inflige %d dégâts à %s avec %s!\n", player.Name, damage, monster.Name, selectedSkill.Name)
+				color.Green("\t%s inflige %d dégâts à %s avec %s!", player.Name, damage, monster.Name, selectedSkill.Name)
 			case "3":
-				// Utiliser un objet
-				UseItemInCombat(player)
-				continue // Le tour n'est pas terminé
+				useItemInCombat(player)
+				continue
 			case "4":
-				// Fuir
-				if rand.Intn(100) < 30 { // 30% de chance de fuite
-					fmt.Println("Vous réussissez à fuir le combat!")
-					return
+				if rand.Intn(100) < 50 {
+					color.Yellow("\tVous réussissez à fuir le combat!")
+					return true
 				} else {
-					fmt.Println("Vous ne parvenez pas à fuir!")
+					color.Red("\tVous ne parvenez pas à fuir!")
 				}
 			default:
-				fmt.Println("Choix invalide.")
+				color.Red("\tChoix invalide.")
 				continue
 			}
 		} else {
-			// Tour du monstre
 			damage := monster.Damage
 			player.CurrentHealth -= damage
-			fmt.Printf("%s inflige %d dégâts à %s avec %s!\n", monster.Name, damage, player.Name, monster.SkillName)
+			color.Red("\t%s inflige %d dégâts à %s avec %s!", monster.Name, damage, player.Name, monster.SkillName)
 		}
 
-		// Vérifier si le combat est terminé
 		if player.CurrentHealth <= 0 {
-			fmt.Printf("%s a été vaincu!\n", player.Name)
-			player.revive()
-			break
+			color.Red("\t%s a été vaincu!", player.Name)
+			return false
 		}
 
 		if monster.CurrentHealth <= 0 {
-			fmt.Printf("%s a été vaincu!\n", monster.Name)
+			color.Green("\t%s a été vaincu!", monster.Name)
 			player.Gold += goldReward
-			player.AddXP(xpReward * player.Level)
-			fmt.Printf("Vous obtenez %d pièces d'or et %d points d'expérience!\n", goldReward, xpReward*player.Level)
-			break
+			player.addXP(xpReward)
+			color.Yellow("\tVous obtenez %d pièces d'or et %d points d'expérience!", goldReward, xpReward)
+			return true
 		}
 
-		// Changer de tour
 		playerTurn = !playerTurn
 		round++
 
-		fmt.Println("Appuyez sur Entrée pour continuer...")
+		fmt.Println("\tAppuyez sur Entrée pour continuer...")
 		fmt.Scanln()
 	}
+	return true
 }
 
-func UseItemInCombat(player *Character) {
+func useItemInCombat(player *Character) {
 	if len(player.Inventory) == 0 {
-		fmt.Println("Votre inventaire est vide.")
+		color.Red("\tVotre inventaire est vide.")
 		return
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
 
-	fmt.Println("\nQuel objet voulez-vous utiliser?")
+	fmt.Println("\n\tQuel objet voulez-vous utiliser?")
 	for i, item := range player.Inventory {
 		if item.Type == "potion" || item.Type == "mana_potion" {
-			fmt.Printf("%d. %s", i+1, item.Name)
+			fmt.Printf("\t%d. %s", i+1, item.Name)
 			if item.Type == "potion" {
 				fmt.Printf(" (Restaure %d PV)", item.Value)
 			} else if item.Type == "mana_potion" {
@@ -173,9 +146,9 @@ func UseItemInCombat(player *Character) {
 			fmt.Println()
 		}
 	}
-	fmt.Printf("%d. Retour\n", len(player.Inventory)+1)
+	fmt.Printf("\t%d. Retour\n", len(player.Inventory)+1)
 
-	fmt.Print("Votre choix: ")
+	fmt.Print("\tVotre choix: ")
 	scanner.Scan()
 	choice := scanner.Text()
 
@@ -187,7 +160,7 @@ func UseItemInCombat(player *Character) {
 	}
 
 	if index < 1 || index > len(player.Inventory) {
-		fmt.Println("Choix invalide.")
+		color.Red("\tChoix invalide.")
 		return
 	}
 
@@ -199,46 +172,47 @@ func UseItemInCombat(player *Character) {
 		if player.CurrentHealth > player.MaxHealth {
 			player.CurrentHealth = player.MaxHealth
 		}
-		fmt.Printf("Vous utilisez une potion et récupérez %d PV. PV actuels: %d/%d\n", item.Value, player.CurrentHealth, player.MaxHealth)
-		player.RemoveItem(item.Name)
+		color.Green("\tVous utilisez une potion et récupérez %d PV. PV actuels: %d/%d", item.Value, player.CurrentHealth, player.MaxHealth)
+		player.removeItem(item.Name)
 	case "mana_potion":
 		if player.Class == "Mage" {
 			player.CurrentMana += item.Value
 			if player.CurrentMana > player.MaxMana {
 				player.CurrentMana = player.MaxMana
 			}
-			fmt.Printf("Vous utilisez une potion de mana et récupérez %d PM. PM actuels: %d/%d\n", item.Value, player.CurrentMana, player.MaxMana)
-			player.RemoveItem(item.Name)
+			color.Green("\tVous utilisez une potion de mana et récupérez %d PM. PM actuels: %d/%d", item.Value, player.CurrentMana, player.MaxMana)
+			player.removeItem(item.Name)
 		} else {
-			fmt.Println("Seuls les mages peuvent utiliser des potions de mana.")
+			color.Red("\tSeuls les mages peuvent utiliser des potions de mana.")
 		}
 	default:
-		fmt.Println("Cet objet ne peut pas être utilisé en combat.")
+		color.Red("\tCet objet ne peut pas être utilisé en combat.")
 	}
 }
 
 func StartTrainingFight(player *Character) {
-	fmt.Println("Vous entrez dans une zone d'entraînement...")
-	goblin := CreateMonster("Gobelin d'entraînement", 40, 5, "Coup de poing")
-	Combat(player, goblin, "Zone d'entraînement", 5, 10)
+	color.Yellow("\tVous entrez dans une zone d'entraînement...")
+	goblin := initGoblin()
+	if Combat(player, goblin, "Zone d'entraînement", 50, 250) {
+		color.Green("\tVous avez gagné le combat d'entraînement!")
+	}
 }
 
-func (c *Character) UsePoisonPotion() {
+func (c *Character) usePoisonPotion() {
 	for i, item := range c.Inventory {
 		if item.Type == "poison_potion" {
-			fmt.Println("Vous utilisez une potion de poison!")
+			color.Red("\tVous utilisez une potion de poison!")
 
 			for j := 0; j < 3; j++ {
 				c.CurrentHealth -= item.Value
 				if c.CurrentHealth < 0 {
 					c.CurrentHealth = 0
 				}
-				fmt.Printf("Poison! Vous perdez %d PV. PV actuels: %d/%d\n", item.Value, c.CurrentHealth, c.MaxHealth)
+				color.Red("\tPoison! Vous perdez %d PV. PV actuels: %d/%d", item.Value, c.CurrentHealth, c.MaxHealth)
 
 				if c.CurrentHealth <= 0 {
-					fmt.Println("Vous avez été vaincu par le poison!")
-					c.revive()
-					break
+					color.Red("\tVous avez été vaincu par le poison!")
+					return
 				}
 
 				time.Sleep(1 * time.Second)
@@ -248,5 +222,5 @@ func (c *Character) UsePoisonPotion() {
 			return
 		}
 	}
-	fmt.Println("Vous n'avez pas de potion de poison dans votre inventaire.")
+	color.Red("\tVous n'avez pas de potion de poison dans votre inventaire.")
 }

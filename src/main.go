@@ -15,6 +15,8 @@ import (
 var player = CreateCharacter()
 
 func main() {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	clearScreen()
 	Logo := `@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -98,8 +100,6 @@ func main() {
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`
 	fmt.Println(Logo)
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	clearScreen()
 	playMusic("Dark Souls Theme")
 
 	typeText("Histoire: Tout commença il y a fort longtemps, dans un royaume d'une contrée éloignée...")
@@ -116,7 +116,6 @@ func main() {
 	typeText("Vous contemplez ses plaines fleuries. En poursuivant votre route, un brigand vous attaque.")
 	fmt.Scanln()
 
-	// Zones de jeu avec tous les combats
 	zones := []struct {
 		name    string
 		enemies []Monster
@@ -130,7 +129,7 @@ func main() {
 				*CreateMonster("Brigand", 60, 10, "Plaquage"),
 				*CreateMonster("Voleur", 60, 20, "Lancer de couteau"),
 			},
-			*CreateBoss("Chavrot", 100, 100,25, "Coups de vieux",4)
+			*CreateBoss("Chavrot", 100, 100, "Coups de vieux"), 5, 2,
 		},
 		{
 			"Tanner des alpha",
@@ -264,7 +263,7 @@ func gameMenu(player *Character) {
 
 		switch choice {
 		case "1":
-			player.DisplayInfo()
+			player.displayInfo()
 		case "2":
 			AccessInventory(player)
 		case "3":
